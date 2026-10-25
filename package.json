@@ -1,0 +1,25 @@
+{
+  "name": "coa-crosscheck",
+  "version": "1.0.0",
+  "description": "Checks a cannabis lab certificate of analysis (COA) against Texas, Missouri, Colorado, California, or federal hemp rules, with a citation for every finding.",
+  "private": true,
+  "author": "Nick Lax",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "cannabis",
+    "compliance",
+    "certificate-of-analysis",
+    "regtech",
+    "texas",
+    "missouri",
+    "colorado",
+    "california",
+    "hemp"
+  ]
+}
