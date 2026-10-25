@@ -1,0 +1,16 @@
+name = "pharos-ai-worker"
+main = "worker.js"
+compatibility_date = "2026-10-25"
+workers_dev = true
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "LIMITS"
+id = "managed-by-deploy-workflow"
+
+[vars]
+ALLOWED_ORIGINS = "https://scenebiscuit-cell.github.io"
+PER_VISITOR_DAILY = "10"
+GLOBAL_DAILY = "40"

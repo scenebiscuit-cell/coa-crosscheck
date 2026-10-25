@@ -274,19 +274,22 @@
 
   function updateAsk() {
     if (!$("askForm")) return;
-    const on = useOllama();
+    const cloud = !!window.COA_CLOUD_URL;
+    const hosted = cloud && $("cloudAI")?.checked;
+    const on = useOllama() || hosted;
     $("askQ").disabled = !on; $("askBtn").disabled = !on;
-    $("askState").textContent = on ? state.local.model : "Local AI off";
+    $("askState").textContent = hosted ? "Cloud AI on" : useOllama() ? state.local.model : "AI answer off";
     $("askState").dataset.on = on ? "1" : "";
-    if (!on && !$("askOut").dataset.used) $("askOut").innerHTML = `<p class="ask-note">Connect a local AI model under <b>Use a local AI model</b> to ask questions in plain language. Answers use only this report and the selected rulebook, and stay on your computer.</p>`;
+    if (!on && !$("askOut").dataset.used) $("askOut").innerHTML = `<p class="ask-note">Connect a local AI model under <b>Use a local AI model</b>, or turn on hosted answers. Answers use only this report and the selected rulebook.</p>`;
     else if (on && !$("askOut").dataset.used) $("askOut").innerHTML = `<p class="ask-note">Try: <button type="button" class="suggest">Which finding matters most?</button> <button type="button" class="suggest">Explain the THC math</button></p>`;
     $("askOut").querySelectorAll(".suggest").forEach(b => b.onclick = () => { $("askQ").value = b.textContent; askLocal(); });
   }
 
   async function askLocal() {
     const q = $("askQ").value.trim();
-    if (!q || !useOllama()) return;
-    const { url, model } = state.local, rs = state.ruleset, r = state.result, d = state.data;
+    const hosted = !!window.COA_CLOUD_URL && $("cloudAI")?.checked;
+    if (!q || (!useOllama() && !hosted)) return;
+    const rs = state.ruleset, r = state.result, d = state.data;
     const context = {
       rules: { jurisdiction: rs.state, market: rs.market, program: rs.program, totalThc: rs.totalThcText,
         limits: (rs.limits || []).map(l => ({ label: l.label, max: l.mg ?? l.grams, unit: l.grams != null ? "g" : "mg", effective: l.effective || null, source: l.cite.text })),
@@ -306,6 +309,17 @@ ${JSON.stringify(context).slice(0, 24000)}`;
     out.innerHTML = `<p class="ask-q">${esc(q)}</p><p class="ask-a" id="askA">Thinking…</p>`;
     $("askBtn").disabled = true;
     try {
+      if (hosted) {
+        const resp = await fetch(window.COA_CLOUD_URL.replace(/\/+$/, "") + "/chat", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: [{ role: "user", content: prompt }] }),
+        });
+        if (!resp.ok) throw new Error((await resp.text()).slice(0, 160));
+        const answer = await resp.json();
+        $("askA").textContent = answer.response || "The model didn't return an answer. Try rephrasing.";
+        return;
+      }
+      const { url, model } = state.local;
       const resp = await fetch(url + "/api/chat", { method: "POST", body: JSON.stringify({ model, stream: true, keep_alive: "10m",
         messages: [{ role: "user", content: prompt }], options: { temperature: 0.2, num_ctx: 16384 } }) });
       if (!resp.ok) throw new Error((await resp.text()).slice(0, 160));
@@ -318,8 +332,10 @@ ${JSON.stringify(context).slice(0, 24000)}`;
       }
       $("askA").textContent = text.trim() || "The model didn't return an answer. Try rephrasing.";
     } catch (e) {
-      $("askA").textContent = e instanceof TypeError ? `Lost the connection to Ollama at ${url}.` : `The model couldn't answer: ${e.message}`;
-    } finally { $("askBtn").disabled = !useOllama(); }
+      $("askA").textContent = e instanceof TypeError
+        ? hosted ? "Couldn't reach the hosted AI worker. Check your connection and try again." : `Lost the connection to Ollama at ${state.local?.url}.`
+        : `The model couldn't answer: ${e.message}`;
+    } finally { $("askBtn").disabled = !(useOllama() || (!!window.COA_CLOUD_URL && $("cloudAI")?.checked)); }
   }
 
   function refreshRunLabel() {
@@ -653,7 +669,8 @@ ${JSON.stringify(context).slice(0, 24000)}`;
         <ul class="checks" id="checks"></ul>
         <details class="data"><summary>Lab results as read</summary><div class="inner" id="tables"></div></details>
         <section class="ask" aria-labelledby="ask-h">
-          <div class="ask-head"><h3 id="ask-h">Ask about this result</h3><span class="lstate" id="askState">Local AI off</span></div>
+          <div class="ask-head"><h3 id="ask-h">Ask about this result</h3><span class="lstate" id="askState">AI answer off</span></div>
+          ${window.COA_CLOUD_URL ? `<label class="toggle" for="cloudAI"><input type="checkbox" id="cloudAI"> AI answer (hosted; sends this report and question to Cloudflare)</label>` : ""}
           <form id="askForm" class="askrow">
             <label class="sr" for="askQ">Your question</label>
             <input id="askQ" type="text" autocomplete="off" placeholder="Why does this fail in California but not Missouri?">
@@ -677,6 +694,7 @@ ${JSON.stringify(context).slice(0, 24000)}`;
     for (const id of ["f-form", "f-size", "f-sizeu", "f-units", "f-net", "f-netu"]) $(id).addEventListener("input", upd);
     $("copy").onclick = copyFindings;
     $("askForm").addEventListener("submit", (e) => { e.preventDefault(); askLocal(); });
+    $("cloudAI")?.addEventListener("change", updateAsk);
     updateAsk();
   }
 
