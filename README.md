@@ -98,7 +98,7 @@ The built-in parser handles simple layouts and many common lab layouts. For any 
 
 ## Continue development
 
-[docs/HANDOFF.md](docs/HANDOFF.md) explains how to work on the project in VS Code with GitHub Copilot. The repository includes Copilot instructions and reusable prompts for adding a lab layout, updating a rule, and syncing a new version. A GitHub Actions workflow runs the tests on every push.
+[docs/WORKFLOW.md](docs/WORKFLOW.md) is the everyday workflow: Claude Code in VS Code for changes and Copilot for autocomplete. Both read the same project rules (`CLAUDE.md` imports `.github/copilot-instructions.md`). [docs/HANDOFF.md](docs/HANDOFF.md) covers Copilot on its own. The repository includes Copilot instructions and reusable prompts for adding a lab layout, updating a rule, and syncing a new version. A GitHub Actions workflow runs the tests on every push.
 
 ## Run it locally
 

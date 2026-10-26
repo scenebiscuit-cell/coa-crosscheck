@@ -1,5 +1,7 @@
 # Working on this project with GitHub Copilot
 
+> **Recommended:** for day-to-day work, use Claude Code in VS Code instead of downloading and syncing zips. See [WORKFLOW.md](WORKFLOW.md). This guide covers Copilot.
+
 This guide is for continuing development in VS Code with GitHub Copilot. Copilot reads the project rules automatically from `.github/copilot-instructions.md`, so you don't have to explain the project every time.
 
 ## What Copilot gets from this repository

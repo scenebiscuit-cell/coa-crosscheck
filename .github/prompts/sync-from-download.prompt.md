@@ -10,7 +10,7 @@ Folder with the new files: ${input:folder:Path to the extracted download}
 
 1. Confirm the folder exists and contains `index.html`, `src/core.js`, and `package.json`. If it doesn't, stop and tell me what you found.
 2. Copy everything from that folder over this repository, replacing existing files. Don't copy a `.git` folder, and don't delete files that exist only in the repository.
-3. Run `git status` and list the changed and new files. If more than 25 files changed, or anything outside `src/`, `embed/`, `tests/`, `docs/`, `.github/`, `index.html`, `README.md`, `package.json`, or `LICENSE` changed, stop and ask me before going on.
+3. Run `git status` and list the changed and new files. If more than 25 files changed, or anything outside `src/`, `embed/`, `tests/`, `docs/`, `.github/`, `.claude/`, `CLAUDE.md`, `.gitignore`, `index.html`, `README.md`, `package.json`, or `LICENSE` changed, stop and ask me before going on.
 4. Run `npm test`. If any test fails, stop and show me the failure. Don't commit.
 5. Suggest a commit message from the changes and wait for my OK. Then commit and push to `main`.
 6. Remind me that GitHub Pages takes a minute or two to update the live site.
