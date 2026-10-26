@@ -17,6 +17,12 @@
     if (t === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
     $("themeLbl").textContent = t[0].toUpperCase() + t.slice(1);
     $("themeBtn").setAttribute("aria-label", `Color theme: ${t === "system" ? "match system" : t}. Activate to change.`);
+    syncPreviewTheme();
+  }
+  // the card preview follows this page's theme switch, not just the system setting
+  function syncPreviewTheme() {
+    const pv = document.getElementById("s-preview"), t = document.documentElement.dataset.theme;
+    if (pv) { if (t) pv.setAttribute("theme", t); else pv.removeAttribute("theme"); }
   }
   let theme = THEMES.includes(remember.get("theme")) ? remember.get("theme") : "system";
   applyTheme(theme);
@@ -83,6 +89,7 @@
       const smp = SAMPLES.find(x => x.id === b.dataset.id);
       const v = CORE.evaluate(CORE.parseText(smp.text), rs).verdict;
       b.dataset.tone = { clear: "pass", review: "warn", hold: "fail" }[v];
+      b.hidden = !!(smp.notIn && smp.notIn.includes(rs.id));   // e.g. no flower or concentrate samples for Texas
       b.querySelector("span").textContent = { clear: "Clears here", review: "Needs review here", hold: "Holds here" }[v];
     }
     renderRulebook();
@@ -104,7 +111,7 @@
         ${rs.microbes.tymc ? `<li>${tip("Total yeast and mold", "tymc")} under ${F(rs.microbes.tymc, 0)} ${tip("CFU/g")}</li>` : ""}</ul>${cite(rs.microbes.cite)}` : "";
     const myco = rs.mycotoxins ? `<ul class="rblist">${rs.mycotoxins.total ? `<li>${tip("Aflatoxins", "aflatoxin")} + ${tip("ochratoxin A", "ochratoxin")} combined ≤ ${rs.mycotoxins.total} ${tip(rs.mycotoxins.unit)}</li>`
         : `<li>${tip("Aflatoxins", "aflatoxin")} (B1, B2, G1, G2) ${rs.mycotoxins.strict ? "under" : "≤"} ${rs.mycotoxins.aflatoxins} ${tip(rs.mycotoxins.unit)}</li><li>${tip("Ochratoxin A", "ochratoxin")} ${rs.mycotoxins.strict ? "under" : "≤"} ${rs.mycotoxins.ochratoxin} ${tip(rs.mycotoxins.unit)}</li>`}</ul>${cite(rs.mycotoxins.cite)}` : "";
-    const water = rs.water ? `<ul class="rblist"><li>Flower and pre-rolls ≤ ${rs.water.flower} ${tip("aw")}</li>${rs.water.hashKief ? `<li>Hash and kief ≤ ${rs.water.hashKief} ${tip("aw")}</li>` : ""}${rs.water.solidEdible ? `<li>Solid edibles ≤ ${rs.water.solidEdible} ${tip("aw")}</li>` : ""}</ul>${rs.water.moisture ? `<p class="rbnote">${esc(rs.water.moisture)}</p>` : ""}${cite(rs.water.cite)}` : "";
+    const water = rs.water ? `<ul class="rblist"><li>Flower and pre-rolls ≤ ${rs.water.flower} ${tip("aw")}</li>${rs.water.hashKief ? `<li>Hash and kief ≤ ${rs.water.hashKief} ${tip("aw")}</li>` : ""}${rs.water.solidEdible ? `<li>${rs.stateCode === "MO" ? "Solid infused products (edibles, lozenges, capsules)" : "Solid edibles"} ≤ ${rs.water.solidEdible} ${tip("aw")}</li>` : ""}</ul>${rs.water.moisture ? `<p class="rbnote">${esc(rs.water.moisture)}</p>` : ""}${cite(rs.water.cite)}` : "";
     const pretty = (k) => ({ "12dichloroethane": "1,2-Dichloroethane", isopropylalcohol: "Isopropyl alcohol", ethylacetate: "Ethyl acetate", ethylether: "Ethyl ether",
       ethyleneoxide: "Ethylene oxide", methylenechloride: "Methylene chloride", mgk264: "MGK-264", kresoximmethyl: "Kresoxim-methyl", methylparathion: "Methyl parathion",
       piperonylbutoxide: "Piperonyl butoxide", chlormequatchloride: "Chlormequat chloride", vitamineacetate: "Vitamin E acetate (inhalables)" }[k] || k[0].toUpperCase() + k.slice(1));
@@ -528,14 +535,16 @@ ${JSON.stringify(context).slice(0, 24000)}`;
         for (let i = 1; i <= Math.min(doc.numPages, 12); i++) {
           const page = await doc.getPage(i);
           const tc = await page.getTextContent();
-          let lastY = null, line = "";
+          // group pieces into lines by height on the page, then join them by their gaps (see CORE.joinLine)
+          let lastY = null, row = [];
           for (const it of tc.items) {
+            if (!it.str) continue;
             const y = Math.round(it.transform[5]);
-            if (lastY !== null && Math.abs(y - lastY) > 2) { text += line.trimEnd() + "\n"; line = ""; }
-            line += (line && !line.endsWith(" ") ? "   " : "") + it.str;
+            if (lastY !== null && Math.abs(y - lastY) > 2) { text += CORE.joinLine(row) + "\n"; row = []; }
+            row.push({ str: it.str, x: it.transform[4], w: it.width, h: it.height || Math.abs(it.transform[3]) });
             lastY = y;
           }
-          text += line.trimEnd() + "\n\n";
+          text += CORE.joinLine(row) + "\n\n";
         }
         state.fileName = f.name;
         if (text.replace(/\s/g, "").length > 150) {
@@ -644,6 +653,8 @@ ${JSON.stringify(context).slice(0, 24000)}`;
         <fieldset class="details">
           <legend>Product details</legend>
           <div class="field"><label for="f-form">Product form</label><input id="f-form" value="${esc(p.form ?? "")}" placeholder="e.g. Gummy"></div>
+          <div class="field"><label for="f-cat">Category</label><select id="f-cat" class="wide">${categoryOptions(p)}</select></div>
+          <div class="field" id="f-ctype-wrap"><label for="f-ctype">Concentrate type</label><input id="f-ctype" value="${esc(p.concentrate_type ?? "")}" placeholder="e.g. Live rosin, shatter, badder"></div>
           <div class="field"><label for="f-size">Dosage unit size</label><div class="row"><input id="f-size" type="number" min="0" step="any" value="${p.unit_size ?? ""}" placeholder="4"><select id="f-sizeu" aria-label="Dosage unit size unit">${opt("g", p.unit_size_unit ?? "g")}${opt("mL", p.unit_size_unit)}</select></div></div>
           <div class="field"><label for="f-units">Units per package</label><input id="f-units" type="number" min="0" step="1" value="${p.units_per_package ?? ""}" placeholder="100"></div>
           <div class="field"><label for="f-net">Net contents</label><div class="row"><input id="f-net" type="number" min="0" step="any" value="${p.net_content ?? ""}" placeholder="400"><select id="f-netu" aria-label="Net contents unit">${opt("g", p.net_content_unit ?? "g")}${opt("mL", p.net_content_unit)}</select></div></div>
@@ -652,6 +663,27 @@ ${JSON.stringify(context).slice(0, 24000)}`;
         <div class="meters" id="meters"></div>
         <ul class="checks" id="checks"></ul>
         <details class="data"><summary>Lab results as read</summary><div class="inner" id="tables"></div></details>
+        <details class="data share" id="shareBox">
+          <summary>Show these lab results on a product page</summary>
+          <div class="inner">
+            <p class="fetchnote">Makes a lab-results card for shoppers. The results travel inside the link or code, so nothing is uploaded or stored. A COA covers one batch, so make a new card when a new batch goes on sale.</p>
+            <div class="field"><label for="s-coa">Link to the lab's COA (optional)</label><input id="s-coa" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://lab.example.com/coa/batch-123.pdf"></div>
+            <div class="sharechecks">
+              <label class="toggle" for="s-checked"><input type="checkbox" id="s-checked"> I compared <b>Lab results as read</b> with the COA, and they match</label>
+              <label class="toggle" for="s-verdict"><input type="checkbox" id="s-verdict" disabled> Also show the result of the rule check</label>
+              <p class="fetchnote" id="s-why">Without this, the card shows the lab's numbers only. A shopper may read a rule check as a guarantee, so include it only after checking the values yourself.</p>
+            </div>
+            <div class="shareout">
+              <div class="field"><label for="s-link">Link: for menu descriptions on Dutchie, Leafly, and similar sites, emails, or QR codes</label>
+                <div class="row"><input id="s-link" readonly spellcheck="false"><button type="button" class="btn" data-copy="s-link">Copy</button><a class="btn" id="s-open" target="_blank" rel="noopener">Open</a></div></div>
+              <div class="field"><label for="s-code">Code: for pages you control, such as your own website, a Shopify store, or a custom Dutchie Plus site</label>
+                <textarea id="s-code" readonly spellcheck="false" rows="4"></textarea>
+                <div class="row"><button type="button" class="btn" data-copy="s-code">Copy code</button><label class="toggle" for="s-iframe"><input type="checkbox" id="s-iframe"> Use a frame instead (for site builders that block scripts)</label></div></div>
+              <div class="row"><button type="button" class="btn" id="s-json">Download data (JSON) for developers</button><span class="status" id="s-msg" role="status" aria-live="polite"></span></div>
+            </div>
+            <div class="sharepreview"><div class="eyebrow">Preview</div><coa-card id="s-preview"></coa-card></div>
+          </div>
+        </details>
         <section class="ask" aria-labelledby="ask-h">
           <div class="ask-head"><h3 id="ask-h">Ask about this result</h3><span class="lstate" id="askState">Local AI off</span></div>
           <form id="askForm" class="askrow">
@@ -665,23 +697,39 @@ ${JSON.stringify(context).slice(0, 24000)}`;
       </div>`;
   }
 
+  // product categories the rules distinguish; the first option follows the COA's own wording
+  const CATEGORIES = [["smokable", "Flower or pre-roll"], ["concentrate", "Concentrate"], ["inhalation", "Vape or inhaler"],
+    ["edible", "Edible"], ["tincture", "Tincture"], ["capsule", "Capsule or tablet"], ["ode", "Orally dissolving"], ["topical", "Topical"],
+    ["suppository", "Suppository"], ["other", "Other"]];
+  function categoryOptions(p) {
+    const rs = state.ruleset, guess = CORE.formClass(p.form);
+    const name = (k) => (CATEGORIES.find(c => c[0] === k) || [, "Not set"])[1];
+    const notHere = (k) => rs.forms?.[k]?.status === "fail" ? ` (not allowed in ${rs.state})` : "";
+    return `<option value="">Auto: ${esc(guess ? name(guess) + notHere(guess) : "not recognized")}</option>` +
+      CATEGORIES.map(([k, l]) => `<option value="${k}"${p.category === k ? " selected" : ""}>${esc(l + notHere(k))}</option>`).join("");
+  }
+
   function bindDetails() {
     const p = state.data.product;
     const upd = () => {
       p.form = $("f-form").value.trim() || null;
+      p.category = $("f-cat").value || null;
+      p.concentrate_type = $("f-ctype").value.trim() || null;
       p.unit_size = CORE.num($("f-size").value); p.unit_size_unit = $("f-sizeu").value;
       p.units_per_package = CORE.num($("f-units").value);
       p.net_content = CORE.num($("f-net").value); p.net_content_unit = $("f-netu").value;
       renderResults();
     };
-    for (const id of ["f-form", "f-size", "f-sizeu", "f-units", "f-net", "f-netu"]) $(id).addEventListener("input", upd);
+    for (const id of ["f-form", "f-cat", "f-ctype", "f-size", "f-sizeu", "f-units", "f-net", "f-netu"]) $(id).addEventListener("input", upd);
     $("copy").onclick = copyFindings;
+    bindShare();
     $("askForm").addEventListener("submit", (e) => { e.preventDefault(); askLocal(); });
     updateAsk();
   }
 
   function renderResults() {
     const d = state.data, rs = state.ruleset;
+    if ($("f-cat") && document.activeElement !== $("f-cat")) $("f-cat").innerHTML = categoryOptions(d.product);   // labels follow the rulebook and the form
     const r = CORE.evaluate(d, rs);
     state.result = r;
     const p = d.product;
@@ -694,7 +742,10 @@ ${JSON.stringify(context).slice(0, 24000)}`;
     if (changed) { $("verdict").classList.remove("settle"); void $("verdict").offsetWidth; $("verdict").classList.add("settle"); }
     $("verdict").innerHTML = `<div class="stamp">${head[0]}</div><div class="vtext"><div class="eyebrow">${esc(rs.state === "Federal hemp" ? "Federal hemp" : rs.state + " · " + rs.market)}</div><h3>${esc(p.name || "Unnamed product")}</h3><p>${esc(head[1])}</p><div class="counts">${pills}</div></div>`;
 
-    const m = [["Batch", p.batch, "batch"], ["Tested", d.dates.tested || d.dates.reported], ["Lab", d.lab.name], ["Product type", p.form ? `${p.form} (${r.route})` : null, r.route]];
+    // the concentrate type field shows for concentrates and vapes, filled from the COA when it names one
+    if ($("f-ctype-wrap")) $("f-ctype-wrap").hidden = !["concentrate", "inhalation"].includes(r.formClass);
+    const kind = [p.form, ["concentrate", "inhalation"].includes(r.formClass) && p.concentrate_type && !(p.form || "").toLowerCase().includes(p.concentrate_type.toLowerCase()) ? p.concentrate_type : null].filter(Boolean).join(" · ");
+    const m = [["Batch", p.batch, "batch"], ["Tested", d.dates.tested || d.dates.reported], ["Lab", d.lab.name], ["Product type", kind ? `${kind} (${r.route})` : null, r.route]];
     $("meta").innerHTML = m.map(([k, v, t]) => `<div><dt>${t ? `<span class="term" tabindex="0" data-tip="${t}">${k}</span>` : k}</dt><dd>${esc(v || "Not on COA")}</dd></div>`).join("");
 
     // meters: one per THC limit that applies to this product in this state
@@ -740,6 +791,47 @@ ${JSON.stringify(context).slice(0, 24000)}`;
     }).join("");
     $("tables").innerHTML = `<div><div class="ptitle">Cannabinoids <span class="sub"><span class="thcmark">●</span> counted toward ${tip("Total THC", "total_thc")} under these rules</span></div>
       <div class="tbl"><table><thead><tr><th>Cannabinoid</th><th>Result</th><th>Unit</th></tr></thead><tbody>${cRows}</tbody></table></div></div>${pHtml || "<p class='status'>No contaminant panels found.</p>"}`;
+    updateShare();
+  }
+
+  /* ---------- share: a lab-results card for product pages (embed/coa-card.js draws it) ---------- */
+  const SITE = location.href.replace(/[#?].*$/, "").replace(/[^/]*$/, "");
+  function bindShare() {
+    const chk = $("s-checked"), ver = $("s-verdict");
+    chk.addEventListener("change", () => { ver.disabled = !chk.checked; if (!chk.checked) ver.checked = false; updateShare(); });
+    for (const id of ["s-verdict", "s-iframe"]) $(id).addEventListener("change", updateShare);
+    $("s-coa").addEventListener("input", updateShare);
+    $("shareBox").querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", async () => {
+      const el = $(b.dataset.copy);
+      try { await navigator.clipboard.writeText(el.value); $("s-msg").textContent = "Copied."; }
+      catch { el.select(); $("s-msg").textContent = "Press Ctrl+C to copy."; }
+    }));
+    $("s-json").addEventListener("click", () => {
+      const c = state.card; if (!c) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(c, null, 2)], { type: "application/json" }));
+      a.download = `lab-results-${String(c.product.batch || "coa").replace(/[^\w.-]+/g, "_")}.json`;
+      document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  }
+  let shareSeq = 0;
+  async function updateShare() {
+    if (!$("shareBox") || !window.COACard) return;
+    const coaUrl = $("s-coa").value.trim();
+    const card = CORE.toCard(state.data, { ruleset: state.ruleset, result: state.result, reviewed: $("s-checked").checked && $("s-verdict").checked, coaUrl });
+    state.card = card;
+    syncPreviewTheme();
+    $("s-preview").card = card;
+    const seq = ++shareSeq;
+    const packed = await COACard.encode(card);
+    if (seq !== shareSeq) return;                       // a newer update already ran
+    const link = `${SITE}embed/card.html#${packed}`;
+    $("s-link").value = link; $("s-open").href = link;
+    const name = card.product.name || "this product";
+    $("s-code").value = $("s-iframe").checked
+      ? `<iframe src="${esc(link)}" title="Lab results for ${esc(name)}" loading="lazy" style="width:100%;max-width:680px;height:760px;border:0"></iframe>`
+      : `<script src="${SITE}embed/coa-card.js" defer></script>\n<coa-card>\n<script type="application/json">${JSON.stringify(card).replace(/</g, "\\u003c")}</script>\n</coa-card>`;
+    $("s-msg").textContent = coaUrl && !card.coaUrl ? "The COA link needs to start with https://." : "";
   }
 
   async function copyFindings() {

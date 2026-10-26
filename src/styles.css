@@ -361,3 +361,18 @@ details.data .inner, .rb-grid > section { grid-template-columns: minmax(0, 1fr);
 .askrow input { width: 100%; }
 .themebtn { display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 480px) { #themeLbl { display: none; } .themebtn { padding: 6px 9px; } .secnav-in { gap: 8px; } }
+
+/* share: lab-results card for product pages */
+details.share .inner { gap: 14px; }
+.sharechecks { display: grid; gap: 8px; }
+.sharechecks .fetchnote { margin: 0; }
+.shareout { display: grid; gap: 14px; }
+.shareout .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.shareout .field .row input { flex: 1 1 200px; font-weight: 500; font-family: var(--f-mono, monospace); font-size: 12.5px; }
+.shareout textarea { width: 100%; min-width: 0; resize: vertical; background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 9px; font-family: var(--f-mono, monospace); font-size: 12px; line-height: 1.4; }
+.shareout a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+.sharepreview { display: grid; gap: 8px; padding-top: 4px; border-top: 1px dashed var(--rule); }
+.sharepreview coa-card { --coa-accent: var(--accent); }
+.field input[type="checkbox"] { width: 16px; height: 16px; flex: none; padding: 0; }
+.field select.wide { width: 100%; }
+.field[hidden] { display: none; }

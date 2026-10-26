@@ -4,13 +4,14 @@
    (orally dissolving), topical, suppository, other. Routes: inhaled, oral, topical. */
 const RULES = (() => {
   const L = (text, url) => ({ text, url });
+  const EN = "https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00046F.htm";
 
   const TX = {
     phase1: L("37 TAC §12.7(b)", "https://www.law.cornell.edu/regulations/texas/37-Tex-Admin-Code-SS-12-7"),
-    dose: L("Occ. Code §169.001(3), as amended by HB 46 (2025)", "https://capitol.texas.gov/tlodocs/89R/analysis/html/HB00046S.htm"),
-    pkg: L("Health & Safety Code ch. 487, as amended by HB 46 (2025)", "https://capitol.texas.gov/tlodocs/89R/analysis/html/HB00046S.htm"),
-    phyto: L("Health & Safety Code §487.1071 (HB 46)", "https://capitol.texas.gov/tlodocs/89R/analysis/html/HB00046S.htm"),
-    form: L("Occ. Code §169.001; §169.006 (pulmonary inhalation)", "https://capitol.texas.gov/tlodocs/89R/analysis/html/HB00046S.htm"),
+    dose: L("Occ. Code §169.001(3), as amended by HB 46 (2025)", "https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00046F.htm"),
+    pkg: L("Health & Safety Code §487.107(c), added by HB 46 (2025)", "https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00046F.htm"),
+    phyto: L("Health & Safety Code §487.1071, added by HB 46 (2025)", "https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00046F.htm"),
+    form: L("Occ. Code §169.001(4)–(5); §169.006 (pulmonary inhalation)", "https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00046F.htm"),
     label: L("37 TAC §12.7(p)(6)–(8)", "https://www.law.cornell.edu/regulations/texas/37-Tex-Admin-Code-SS-12-7"),
     testing: L("TCUP overview (Vicente LLP, 2026)", "https://vicentellp.com/insights/texas-compassionate-use-program-tcup-overview/"),
   };
@@ -21,7 +22,7 @@ const RULES = (() => {
     myco: L("4 CCR §15721", "https://www.law.cornell.edu/regulations/california/4-CCR-15721"),
     metals: L("4 CCR §15723", "https://law.cornell.edu/regulations/california/4-CCR-15723"),
     water: L("4 CCR §15717", "https://www.law.cornell.edu/regulations/california/4-CCR-15717"),
-    testing: L("4 CCR §§15717–15724 (laboratory testing)", "https://www.law.cornell.edu/regulations/california/4-CCR-15724"),
+    testing: L("4 CCR §15714 (required testing)", "https://www.law.cornell.edu/regulations/california/4-CCR-15714"),
   };
   const CO = {
     testing: L("1 CCR 212-3, Rule 4-115", "https://www.law.cornell.edu/regulations/colorado/1-CCR-212-3-4-115"),
@@ -97,7 +98,7 @@ const RULES = (() => {
 
   const caBase = (market) => ({
     state: "California", stateCode: "CA", regulator: "Department of Cannabis Control (DCC)",
-    verified: "2026-10-24",
+    verified: "2026-10-25",
     totalThcKeys: D9_THCA,
     totalThcText: "THC + THCA × 0.877 (§15724). Δ8 and other isomers are reported separately; the checker shows them in the self-checks.",
     panel: {
@@ -108,9 +109,11 @@ const RULES = (() => {
         { key: "microbials", label: "Microbial impurities", cite: CA.micro },
         { key: "mycotoxins", label: "Mycotoxins", cite: CA.myco },
         { key: "pesticides", label: "Residual pesticides" },
-        { key: "residual_solvents", label: "Residual solvents", when: (fc) => fc !== "smokable" },
-        { key: "water_activity", label: "Water activity", when: (fc, form) => fc === "smokable" || (fc === "edible" && !/beverage|drink|liquid|syrup/i.test(form || "")), cite: CA.water },
+        { key: "residual_solvents", label: "Residual solvents and processing chemicals" },
+        { key: "foreign_matter", label: "Foreign material" },
+        { key: "water_activity", label: "Water activity", when: (fc, form) => fc === "smokable" || (["edible", "ode"].includes(fc) && !/beverage|drink|liquid|syrup/i.test(form || "")), cite: CA.water },
       ],
+      note: "California revised its pesticide action levels and LOQ rules (DCC-2025-03-R), so pesticide results are compared to the lab's printed limits. Confirm the lab reports against the current table.",
     },
     metals: { table: caMetals, unit: "µg/g", cite: CA.metals, routeLabels: { inhaled: "Inhalable", oral: "Other cannabis goods", topical: "Other cannabis goods" } },
     microbes: { cite: CA.micro, required: [
@@ -119,12 +122,13 @@ const RULES = (() => {
       { org: "aspergillus", label: "Aspergillus (fumigatus, flavus, niger, terreus)", when: (route) => route === "inhaled" },
     ] },
     mycotoxins: { cite: CA.myco, aflatoxins: 20, ochratoxin: 20, unit: "µg/kg" },
-    water: { cite: CA.water, flower: 0.65, solidEdible: 0.85 },
+    water: { cite: CA.water, flower: 0.65, solidEdible: 0.85, solidForms: ["edible", "ode"] },
     labelVariance: { text: "±10% between the label and the COA for any labeled cannabinoid, Total THC, or Total CBD.", cite: CA.potency },
     synthetic: { status: "warn", text: "Semi-synthetic cannabinoids such as HHC or THC-O-acetate aren't expected in licensed cannabis goods. Confirm the product's ingredients and process with the manufacturer." },
     forms: {},
     tester: { text: "California requires testing by a DCC-licensed laboratory before retail sale.", cite: CA.testing },
-    sources: [CA.limits, CA.potency, CA.micro, CA.myco, CA.metals, CA.water],
+    sources: [CA.testing, CA.limits, CA.potency, CA.micro, CA.myco, CA.metals, CA.water,
+      L("DCC tincture guidance (tinctures are concentrates)", "https://www.cannabis.ca.gov/wp-content/uploads/sites/2/2022/11/beverage-and-tincture-guidance_legal-draft_2022-1031.pdf")],
     market,
   });
 
@@ -167,7 +171,7 @@ const RULES = (() => {
   const SETS = [
     {
       id: "TX-MED", state: "Texas", stateCode: "TX", market: "Medical", program: "Texas Compassionate Use Program (TCUP)",
-      regulator: "Texas Department of Public Safety", verified: "2026-10-24",
+      regulator: "Texas Department of Public Safety", verified: "2026-10-25",
       headline: [{ big: "10 mg", small: "THC per dosage unit" }, { big: "1 g", small: "THC per package or device" }],
       totalThcKeys: ALL_THC,
       totalThcText: "All tetrahydrocannabinols: Δ9 + Δ8 + Δ10 + exo-THC + THCA × 0.877. The statute caps \"tetrahydrocannabinols,\" not only Δ9-THC.",
@@ -195,7 +199,7 @@ const RULES = (() => {
       },
       traceCite: TX.label,
       tester: { text: "TCUP doesn't license independent testing labs; the dispensing organization is responsible for required testing.", cite: TX.testing },
-      sources: [TX.phase1, TX.dose, TX.phyto, TX.testing],
+      sources: [TX.phase1, L("HB 46 (89th Leg., 2025), enrolled text", EN), TX.testing],
     },
     {
       id: "MO", state: "Missouri", stateCode: "MO", market: "Medical & adult-use", program: "Missouri medical and adult-use marijuana",
@@ -213,6 +217,8 @@ const RULES = (() => {
           note: "Missouri sets no per-serving THC cap. A package can't exceed 3 ounces of dried marijuana or its equivalent, and 800 mg of THC in infused products equals 1 ounce." },
         { id: "pkgw", scope: "weight", grams: 24, forms: ["concentrate", "inhalation"], label: "Concentrate per package (3 oz equivalent)", cite: MO.pkg,
           note: "For concentrates, 8 g equals 1 ounce of dried marijuana, so a package can hold at most 24 g." },
+        { id: "pkgf", scope: "weight", grams: 85.05, forms: ["smokable"], label: "Flower per package (3 oz)", cite: MO.pkg,
+          note: "A package can't exceed 3 ounces (85.05 g) of dried, unprocessed marijuana. That covers flower and pre-rolls." },
       ],
       panel: {
         cite: MO.testing,
@@ -220,7 +226,7 @@ const RULES = (() => {
           { key: "potency", label: "Cannabinoid profile" }, { key: "microbials", label: "Microbials", cite: MO.micro },
           { key: "mycotoxins", label: "Mycotoxins", cite: MO.micro }, { key: "heavy_metals", label: "Heavy metals", cite: MO.metals },
           { key: "pesticides", label: "Pesticides and chemical residues", cite: MO.chem }, { key: "residual_solvents", label: "Residual solvents", cite: MO.solvents },
-          { key: "water_activity", label: "Water activity", when: (fc, form) => fc === "smokable" || /hash|kief/i.test(form || "") || (fc === "edible" && !/beverage|drink|liquid|syrup/i.test(form || "")), cite: MO.water },
+          { key: "water_activity", label: "Water activity", when: (fc, form) => fc === "smokable" || /hash|kief/i.test(form || "") || (["edible", "ode", "capsule"].includes(fc) && !/beverage|drink|liquid|syrup|softgel/i.test(form || "")), cite: MO.water },
           { key: "foreign_matter", label: "Foreign matter", cite: MO.foreign },
         ],
         note: "Heavy-metal failures can't be remediated; other failures can be reanalyzed or remediated once under 19 CSR 100-1.110(10)–(11).",
@@ -231,7 +237,7 @@ const RULES = (() => {
         { org: "aspergillus", label: "Aspergillus (fumigatus, flavus, niger, terreus)" },
       ] },
       mycotoxins: { cite: MO.micro, total: 20, unit: "µg/kg" },
-      water: { cite: MO.water, flower: 0.65, hashKief: 0.65, solidEdible: 0.85, moisture: "Flower and pre-rolls also fail below 5.0% or above 15.0% moisture." },
+      water: { cite: MO.water, flower: 0.65, hashKief: 0.65, solidEdible: 0.85, solidForms: ["edible", "ode", "capsule"], moisture: "Flower and pre-rolls also fail below 5.0% or above 15.0% moisture." },
       pesticides: { table: moPesticides, cite: MO.chem },
       solvents: { table: moSolvents, cite: MO.solvents },
       labelVariance: { text: "Labels must show exact mg of each profile cannabinoid per serving. The DCR guide treats a tested amount within about 10% of a labeled amount as reasonable.", cite: MO.guide },
@@ -277,13 +283,15 @@ const RULES = (() => {
     }),
     {
       id: "US-HEMP", state: "Federal hemp", stateCode: "US", market: "Hemp-derived products (all states)", program: "Federal hemp definition",
-      regulator: "Federal law (USDA / FDA); states add their own rules", verified: "2026-10-24",
+      regulator: "Federal law (USDA / FDA); states add their own rules", verified: "2026-10-25",
       headline: [{ big: "0.4 mg", small: "Total THC per container (from Dec 11, 2026)" }, { big: "0.3%", small: "Total THC, dry weight" }],
       totalThcKeys: ALL_THC,
       totalThcText: "Total THC includes Δ9-THC, THCA (× 0.877), and other cannabinoids with similar effects, such as Δ8.",
       limits: [
-        { id: "pkg", scope: "pkg", mg: 0.4, forms: "*", label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11",
+        { id: "pkg", scope: "pkg", mg: 0.4, forms: "*", exceptForms: ["smokable"], label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11",
           note: "Until December 11, 2026, hemp is defined by Δ9-THC at or under 0.3% on a dry-weight basis." },
+        { id: "pkgf", scope: "pkg", mg: 0.4, forms: ["smokable"], review: true, label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11",
+          note: "The 0.4 mg cap applies to final hemp-derived cannabinoid products. Whether retail flower counts as one is unsettled until FDA guidance on \"containers\", so this is flagged for review, not failed. Flower must meet 0.3% total THC (THCA included) either way." },
       ],
       hempConcentration: { pct: 0.3, cite: HEMP.def },
       panel: null,

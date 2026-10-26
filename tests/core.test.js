@@ -170,6 +170,19 @@ test("MO: concentrates and vapes are capped by weight, 24 g per package", () => 
   assert.equal(check(evalData(data(3.5), "MO"), "lim-pkg"), undefined);
 });
 
+test("CA: residual solvents and foreign material are required for every sample, flower included", () => {
+  const r = evalData({ product: { form: "Flower" }, cannabinoids: [{ name: "THCA", value: 20, unit: "%" }],
+    panels: [{ category: "heavy_metals", name: "Heavy metals", status: "pass", analytes: [] }] }, "CA-AU");
+  assert.match(check(r, "panel").title, /Residual solvents/);
+  assert.match(check(r, "panel").title, /Foreign material/);
+});
+
+test("MO: capsules need a water activity result; CA capsules don't", () => {
+  const data = { product: { form: "Capsules" }, cannabinoids: [{ name: "Δ9-THC", value: 10, unit: "mg/g" }] };
+  assert.match(check(evalData(data, "MO"), "panel").title, /Water activity/);
+  assert.doesNotMatch(check(evalData(data, "CA-AU"), "panel").title, /Water activity/);
+});
+
 /* ---------- Federal hemp ---------- */
 test("Hemp: the 0.4 mg per-container cap warns before Dec 11, 2026 and fails after", () => {
   assert.equal(check(run("gummy", "US-HEMP", "2026-10-25"), "lim-pkg").status, "warn");
@@ -215,4 +228,65 @@ test("every rulebook has citations with links and a verified date", () => {
 test("ND and <LOQ read as zero", () => {
   assert.equal(CORE.num("ND"), 0);
   assert.equal(CORE.num("<LOQ"), 0);
+});
+
+/* ---------- flower and concentrates (every rulebook except Texas offers them) ---------- */
+test("Flower sample clears in MO, CO and CA, and holds in Texas and under federal hemp", () => {
+  for (const rs of ["MO", "CO-AU", "CO-MED", "CA-AU", "CA-MED"]) assert.equal(run("flower", rs).verdict, "clear", rs);
+  assert.equal(check(run("flower", "TX-MED"), "form").status, "fail");          // TCUP excludes smoking
+  assert.equal(check(run("flower", "US-HEMP"), "hempconc").status, "fail");     // far over 0.3%
+});
+
+test("MO: flower packages are capped at 3 oz (85.05 g)", () => {
+  assert.equal(check(run("flower", "MO"), "lim-pkgf").status, "pass");          // 3.5 g
+  const big = sample("flower"); big.product.net_content = 90;
+  assert.equal(check(CORE.evaluate(big, RULES.byId("MO"), { today: TODAY }), "lim-pkgf").status, "fail");
+});
+
+test("Concentrate sample holds in Missouri only, on butanes over 800 ppm", () => {
+  const mo = run("concentrate", "MO");
+  assert.equal(mo.verdict, "hold");
+  assert.match(check(mo, "results").detail, /Butanes 920/);
+  assert.equal(check(mo, "lim-pkgw").status, "pass");                            // 1 g of a 24 g limit
+  assert.equal(run("concentrate", "CA-AU").verdict, "clear");                   // 677 mg, under the 1,000 mg cap
+  assert.equal(check(run("concentrate", "CO-AU"), "printed").status, "warn");   // lab printed 5,000 vs Colorado's 1,000
+});
+
+test("Hemp: the per-container cap is a review item for flower and a failure for other products", () => {
+  const after = "2026-12-15";
+  assert.equal(check(run("flower", "US-HEMP", after), "lim-pkgf").status, "warn");
+  assert.equal(check(run("flower", "US-HEMP", after), "lim-pkg"), undefined);
+  assert.equal(check(run("concentrate", "US-HEMP", after), "lim-pkg").status, "fail");
+});
+
+test("a category picked on the page overrides the COA's wording", () => {
+  const d = sample("concentrate"); d.product.form = "Sugar";                   // not a word the guesser knows
+  assert.equal(CORE.evaluate(d, RULES.byId("CA-AU"), { today: TODAY }).formClass, "other");
+  d.product.category = "concentrate";
+  const r = CORE.evaluate(d, RULES.byId("CA-AU"), { today: TODAY });
+  assert.equal(r.formClass, "concentrate");
+  assert.equal(check(r, "lim-pkgc").status, "pass");
+});
+
+test("concentrate type: read from the COA, kept separate from the Concentrate category", () => {
+  const d = sample("concentrate");
+  assert.equal(d.product.form, "Concentrate");
+  assert.equal(d.product.concentrate_type, "Live Resin Badder");          // its own "Concentrate Type:" line
+  const t = (form, name) => CORE.concentrateType(form, name);
+  assert.equal(t("Concentrate (live rosin)", ""), "Live Rosin");
+  assert.equal(t("Concentrate - Shatter", ""), "Shatter");
+  assert.equal(t("Concentrate", "Gelato Live Hash Rosin 1 g"), "Live Hash Rosin");
+  assert.equal(t("Concentrate", "Tangie THCa Diamonds"), "THCA Diamonds");
+  assert.equal(t("Concentrate", "Sunset Sherbet 1 g"), null);              // nothing named, so left blank
+  assert.equal(sample("gummy").product.concentrate_type, null);           // only for concentrates and vapes
+  // the local AI reader's answer gets the same fallback
+  const ai = CORE.sanitizeExtraction({ product: { form: "Concentrate", name: "Papaya Cured Resin Sauce" } });
+  assert.equal(ai.product.concentrate_type, "Cured Resin Sauce");
+});
+
+test("card: shows the concentrate type next to the category", () => {
+  const card = CORE.toCard(sample("concentrate"), { ruleset: RULES.byId("CA-AU") });
+  assert.equal(card.product.form, "Concentrate");
+  assert.equal(card.product.concentrateType, "Live Resin Badder");
+  assert.equal(CORE.toCard(sample("flower"), { ruleset: RULES.byId("CA-AU") }).product.concentrateType, undefined);
 });

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Lab results</title>
+<meta name="description" content="Lab results read from a cannabis product's certificate of analysis.">
+<style>
+  :root { color-scheme: light dark; --page: #eef3f1; }
+  @media (prefers-color-scheme: dark) { :root { --page: #0d1312; } }
+  body { margin: 0; background: var(--page); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 16px; }
+  coa-card { margin: 0 auto; }
+  .missing { padding: 24px 16px; color: #55625f; }
+</style>
+</head>
+<body>
+<main id="main"><coa-card id="card"></coa-card></main>
+<script src="coa-card.js"></script>
+<script>
+  // The card's data is packed into the link after "#". Browsers don't send that part to the server.
+  (async () => {
+    const card = document.getElementById("card");
+    const show = async () => {
+      const hash = location.hash.slice(1);
+      if (!hash) { document.getElementById("main").innerHTML = '<p class="missing">This link is missing its lab results. Ask the seller for the lab\'s certificate of analysis.</p>'; return; }
+      try {
+        const data = await COACard.decode(hash);
+        card.card = data;
+        if (data && data.product && data.product.name) document.title = "Lab results: " + data.product.name;
+      } catch { card.card = null; }
+    };
+    await show();
+    addEventListener("hashchange", show);
+  })();
+</script>
+</body>
+</html>
