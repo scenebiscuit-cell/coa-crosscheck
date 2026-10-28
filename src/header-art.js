@@ -26,17 +26,19 @@
     for (const e of eyes) {
       const dx = px - e.x, dy = py - e.y, d = Math.hypot(dx, dy) || 1;
       const k = Math.min(1, d / 120) * e.reach;           // close to the eye: look less far
-      e.pupil.setAttribute("transform", `translate(${(dx / d * k).toFixed(2)} ${(dy / d * k).toFixed(2)})`);
+      const down = root.dataset.mood === "hold" ? e.reach * 0.7 : 0;   // sad eyes droop toward the floor
+      e.pupil.setAttribute("transform", `translate(${(dx / d * k).toFixed(2)} ${(dy / d * k + down).toFixed(2)})`);
     }
   }
   let queued = null;
+  let last = null;
   function onPointer(ev) {
     queued = [ev.clientX, ev.clientY];
     if (frame) return;
     frame = requestAnimationFrame(() => {
       frame = 0;
       const p = toSvg(queued[0], queued[1]);
-      if (p) look(p.x, p.y);
+      if (p) { last = p; look(p.x, p.y); }
     });
   }
   let frame = 0;
@@ -60,7 +62,7 @@
   }
   blinkSoon();
 
-  /* ---------- eyelids for the Review squint ---------- */
+  /* ---------- eyelids: a skeptical squint for Review, sad eyes for Hold ---------- */
   // each eye gets a lid line and a clip that hides the eye above it, so the lid looks like it slid down
   const NS_ = "http://www.w3.org/2000/svg";
   const defs = svg.querySelector("defs") || svg.insertBefore(document.createElementNS(NS_, "defs"), svg.firstChild);
@@ -72,12 +74,28 @@
     g.querySelector(".open").setAttribute("clip-path", `url(#${clip.id})`);
     const line = document.createElementNS(NS_, "path");
     line.setAttribute("class", "lid"); line.setAttribute("stroke-width", (r * 0.42).toFixed(2)); g.append(line);
+    // one tear under each trichome's left eye, at its outer corner; CSS shows it only for Hold
+    if (side > 0) {
+      const tear = document.createElementNS(NS_, "path"), tx = x - r * 0.55, ty = y + r * 1.45, s = r * 0.5;
+      tear.setAttribute("class", "tear");
+      tear.setAttribute("d", `M${tx} ${ty - s * 1.5} Q${tx + s * 1.05} ${ty - s * 0.1} ${tx} ${ty + s} Q${tx - s * 1.05} ${ty - s * 0.1} ${tx} ${ty - s * 1.5}Z`);
+      g.append(tear);
+    }
     return { x, y, r, side, shape, line };
   });
-  function setLids(down) {
+  function setLids(kind) {
     for (const l of lids) {
       const { x, y, r, side } = l, w = r * 1.05;
-      if (!down) { l.shape.setAttribute("d", `M${x - w * 2} ${y - w * 2}h${w * 4}v${w * 4}h${-w * 4}Z`); l.line.removeAttribute("d"); continue; }
+      if (kind === "sad") {
+        // inner corner raised, outer corner drooping: the lid slopes down away from the nose
+        const hi = y - r * 0.78, lo = y - r * 0.05;
+        const x1 = x - w, x2 = x + w, y1 = side > 0 ? lo : hi, y2 = side > 0 ? hi : lo;
+        const arc = `Q${x} ${((y1 + y2) / 2 - r * 0.08).toFixed(2)} ${x2} ${y2.toFixed(2)}`;
+        l.shape.setAttribute("d", `M${x1} ${y1.toFixed(2)} ${arc} V${y + r * 2} H${x1} Z`);
+        l.line.setAttribute("d", `M${x1} ${y1.toFixed(2)} ${arc}`);
+        continue;
+      }
+      if (kind !== "squint") { l.shape.setAttribute("d", `M${x - w * 2} ${y - w * 2}h${w * 4}v${w * 4}h${-w * 4}Z`); l.line.removeAttribute("d"); continue; }
       // the lid sits a little above centre and slopes down toward the nose: a narrow, skeptical look
       const yo = y - r * 0.32 - side * r * 0.16, yi = y - r * 0.32 + side * r * 0.16;
       const x1 = x - w, x2 = x + w, y1 = side > 0 ? yo : yi, y2 = side > 0 ? yi : yo;
@@ -98,7 +116,10 @@
   function mood(m) {
     if (!MOUTH[m]) m = "idle";
     root.dataset.mood = m;
-    setLids(m === "review");
+    setLids(m === "review" ? "squint" : m === "hold" ? "sad" : null);
+    // re-aim the pupils for the new mood; before the pointer has moved they look straight ahead
+    if (last) look(last.x, last.y);
+    else for (const e of eyes) e.pupil.setAttribute("transform", `translate(0 ${m === "hold" ? (e.reach * 0.7).toFixed(2) : 0})`);
     for (const t of tris) {
       const x = +t.dataset.mx, y = +t.dataset.my, r = +t.dataset.r;
       t.querySelector(".mouth")?.setAttribute("d", MOUTH[m](x, y, r));   // eyes-only art has no mouth
