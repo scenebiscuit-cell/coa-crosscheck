@@ -2,6 +2,10 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // numbers in findings get their own color and font so they stand out from the words.
+  // Runs on already-escaped text: skips digits inside entities (&#39;), names like Δ9-THC, and rule numbers (19 CSR 100-1.110).
+  const NUM = /(?<![\p{L}\p{N}#&;§.\-\/)(])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:\s?(?:%|mg\/g|mg\/mL|mg|g|ppm|ppb|µg\/g|µg\/kg|CFU\/g|aw|mL|oz))?)(?![\p{L}\p{N}]|\s?(?:CSR|TAC|CCR|U\.S\.C)\b|-\d)/gu;
+  const nums = (html) => html.replace(NUM, '<span class="n">$1</span>');
   const F = CORE.fmt;
   const remember = {
     get(k) { try { return localStorage.getItem("coax." + k); } catch { return null; } },
@@ -881,7 +885,7 @@
     const order = { fail: 0, warn: 1, pass: 2, info: 3 };
     const checks = [...r.checks].sort((a, b) => order[a.status] - order[b.status]);
     $("checks").innerHTML = checks.map((c, i) => `<li class="check" data-s="${c.status}" style="--i:${i}"><span class="tag">${{ fail: "Fail", warn: "Review", pass: "Pass", info: "Note" }[c.status]}</span>
-      <h4>${esc(c.title)}</h4><p>${esc(c.detail)}${cite(c.cite)}</p></li>`).join("");
+      <h4>${nums(esc(c.title))}</h4><p>${nums(esc(c.detail))}${cite(c.cite)}</p></li>`).join("");
 
     // lab results, with tooltips on names, results and units
     const keys = rs.totalThcKeys || Object.keys(CORE.THC_WEIGHT);
