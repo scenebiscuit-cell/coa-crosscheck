@@ -424,7 +424,9 @@ details.share .inner { gap: 14px; }
 /* moods follow the verdict, told with the eyes only */
 .band-art[data-mood="clear"] .open { opacity: 0; }
 .band-art[data-mood="clear"] .happy { opacity: 1; }
-.band-art[data-mood="review"] .eye.r { transform: scaleY(.55); }
+/* review: heavy, suspicious lids. header-art.js lowers a lid line and clips the eye under it */
+.crew .lid { fill: none; stroke: #1d1533; stroke-linecap: round; opacity: 0; }
+.band-art[data-mood="review"] .lid { opacity: 1; }
 .band-art[data-mood="hold"] .eye { transform: scale(1.08); }
 .band-art[data-mood="hold"] .dot { transform: scale(.8); }
 .band-art.react .fg .head { animation: crew-hop .45s cubic-bezier(.3,1.6,.5,1); }

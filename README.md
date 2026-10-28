@@ -4,7 +4,7 @@
 
 A browser tool that checks a cannabis lab **certificate of analysis (COA)** against the rules of the state where the product will be sold. Pick a rulebook, paste or upload a COA, and get a verdict where every finding cites the rule it comes from. Hover or tap any underlined term for a plain-language explanation.
 
-![COA Crosscheck checking a vape cartridge against California adult-use rules](docs/screenshot-desktop.png)
+![COA Crosscheck holding a live resin badder concentrate under Missouri rules, with one failure, one item to review, and eight passes](docs/screenshot-desktop.png)
 
 ## Rulebooks
 
@@ -41,7 +41,7 @@ After a check, **Show these lab results on a product page** makes a card for sho
 
 The compliance verdict appears on the card only if the seller confirms they checked the values against the COA. See [docs/SHARING.md](docs/SHARING.md).
 
-<img src="docs/card-mobile.png" alt="The lab-results card on a phone" width="280">
+<img src="docs/card-mobile.png" alt="The shopper lab-results card for a Colorado gummy on a phone, showing potency per piece and the passed safety tests" width="280">
 
 ## How it works
 
@@ -79,9 +79,11 @@ When a COA is still misread, the self-checks flag it and every field can be corr
 
 ## Design
 
-The interface follows the 2026 trends that suit a professional tool ([Figma](https://www.figma.com/resource-library/web-design-trends/), [Envato](https://elements.envato.com/learn/web-design-trends), [We.inc](https://we.inc/blog/website-design-trends-2026)) and skips the decorative ones (3D, maximalism, retrofuturism):
+The interface follows the 2026 trends that suit a professional tool ([Figma](https://www.figma.com/resource-library/web-design-trends/), [Envato](https://elements.envato.com/learn/web-design-trends), [We.inc](https://we.inc/blog/website-design-trends-2026)) and skips the purely decorative ones (3D, maximalism):
 
-- **A playful header for a tedious job:** a microscope view of trichomes on the leaf surface, with smooth stalks and glossy resin heads in the clear, milky, and amber colors growers watch for, on a flat, film-grain forest green (no gradient). The three tallest have eyes that follow the cursor with their eyes, blink, and react to each verdict with their eyes (happy for Clear, a squint for Review, wide for Hold). They're decorative and hidden from screen readers, and they stay still for people who prefer reduced motion.
+- **A playful header for a tedious job:** a microscope view of trichomes on the leaf surface, with smooth stalks and glossy resin heads in the clear, milky, and amber colors growers watch for, on a flat, film-grain forest green (no gradient). The three tallest have eyes that follow the cursor, blink, and react to each verdict (happy for Clear, heavy skeptical eyelids for Review, wide for Hold). Pick a Texas rulebook and the tallest one puts on a cowboy hat; pick federal hemp and it wears an old-school black government fedora. They're decorative and hidden from screen readers, and they stay still for people who prefer reduced motion.
+<img src="docs/crew.gif" alt="The trichome header: eyes follow the cursor, smile for a Clear verdict, widen for a Hold, and a cowboy hat drops on for Texas" width="300">
+
 - **Color-coded test categories:** each kind of test (cannabinoids, solvents, pesticides, microbials, metals, and more) has its own hue and a larger, bolder heading, so a long COA is quicker to scan. Every hue passes WCAG AA contrast in both themes.
 - **Retrofuturist instrument panel:** below the microscope header, the page is styled like a mid-century lab instrument: enamel panels with chrome trim, capsule buttons that press in, THC results on dark phosphor readout screens, and indicator lamps beside each finding. The period display face (Michroma) is kept to short titles; everything people read stays in IBM Plex Sans. The skin lives in `src/retro.css`, separate from the base styles.
 - **Accessibility as a baseline:** passes an automated WCAG 2.2 AA audit (axe-core) in light and dark themes, with a skip link, visible focus, keyboard-reachable tooltips, and 24 px minimum tap targets.
@@ -126,7 +128,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 npm test                      # Node 18+, no dependencies
 ```
 
-<img src="docs/screenshot-mobile.png" alt="The rulebook picker on a phone in dark mode" width="280">
+<img src="docs/screenshot-mobile.png" alt="COA Crosscheck on a phone in dark mode with the Texas rulebook selected; the tallest trichome wears a cowboy hat" width="280">
 
 ## Disclaimer
 
