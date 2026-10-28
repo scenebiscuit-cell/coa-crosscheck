@@ -60,13 +60,13 @@
   }
 
   const CSS = `
-    :host { --a: var(--coa-accent, #0f6e62); --bg: #ffffff; --fg: #17201f; --mut: #55625f; --line: #d9e2df; --soft: #f2f6f5;
+    :host { --a: var(--coa-accent, #1e6b52); --bg: #ffffff; --fg: #17201f; --mut: #55625f; --line: #d9e2df; --soft: #f2f6f5;
       --ok: #136b3c; --okbg: #e4f4ea; --bad: #a3221b; --badbg: #fbe9e7; --nt: #5d6664; --ntbg: #eceeed;
       display: block; font: inherit; color: var(--fg); max-width: 640px; }
     @media (prefers-color-scheme: dark) { :host(:not([theme="light"])) { --bg: #141b1a; --fg: #e6eeec; --mut: #a3b1ad; --line: #2c3836; --soft: #1b2422;
-      --ok: #7fd6a3; --okbg: #163223; --bad: #ff9c92; --badbg: #3a1714; --nt: #b4bebb; --ntbg: #262e2c; --a: var(--coa-accent, #6fd3c3); } }
+      --ok: #7fd6a3; --okbg: #163223; --bad: #ff9c92; --badbg: #3a1714; --nt: #b4bebb; --ntbg: #262e2c; --a: var(--coa-accent, #7fd6b0); } }
     :host([theme="dark"]) { --bg: #141b1a; --fg: #e6eeec; --mut: #a3b1ad; --line: #2c3836; --soft: #1b2422;
-      --ok: #7fd6a3; --okbg: #163223; --bad: #ff9c92; --badbg: #3a1714; --nt: #b4bebb; --ntbg: #262e2c; --a: var(--coa-accent, #6fd3c3); }
+      --ok: #7fd6a3; --okbg: #163223; --bad: #ff9c92; --badbg: #3a1714; --nt: #b4bebb; --ntbg: #262e2c; --a: var(--coa-accent, #7fd6b0); }
     * { box-sizing: border-box; }
     .card { background: var(--bg); border: 1px solid var(--line); border-top: 4px solid var(--a); border-radius: 12px; padding: 18px; line-height: 1.45; }
     .eyebrow { margin: 0; font-size: .75em; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--a); }
