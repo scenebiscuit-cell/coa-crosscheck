@@ -1,6 +1,7 @@
 /* Header art: three trichomes (clear, milky, amber) that watch the pointer, blink, and react to the verdict.
    Decorative only: hidden from screen readers, no focus stops, and no idle motion when the visitor
-   prefers reduced motion. Exposes window.HeaderArt.mood("clear" | "review" | "hold" | "idle"). */
+   prefers reduced motion. Exposes window.HeaderArt.mood("clear" | "review" | "hold" | "idle")
+   and window.HeaderArt.hat(true | false), which puts a cowboy hat on the tall clear trichome for Texas. */
 (function () {
   "use strict";
   const root = document.getElementById("crew");
@@ -75,6 +76,46 @@
     }
     if (m !== "idle" && !reduce.matches) { root.classList.remove("react"); void root.getBoundingClientRect(); root.classList.add("react"); }
   }
+
+  /* ---------- a cowboy hat for Texas ---------- */
+  // drawn to fit the trichome's own size; fills are set here so no stylesheet is needed
+  const NS = "http://www.w3.org/2000/svg";
+  function drawHat(t) {
+    const bulb = t.querySelector(".bulb");
+    const x = +bulb.getAttribute("cx"), cy = +bulb.getAttribute("cy"), r = +bulb.getAttribute("r");
+    const u = r / 26, y = cy - r * 0.84;               // u: one unit of the 64-unit favicon drawing
+    const P = (d) => d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, a, b) => `${(x + (+a - 32) * u).toFixed(1)} ${(y + (+b - 20) * u).toFixed(1)}`);
+    const outer = document.createElementNS(NS, "g"), g = document.createElementNS(NS, "g");
+    outer.setAttribute("class", "hat"); outer.append(g);   // outer moves when it drops on, inner holds the tilt
+    for (const [d, fill, stroke] of [
+      ["M2 14 Q4 29 32 28 Q60 29 62 14 Q58 23 32 23 Q6 23 2 14 Z", "#8a5a1e"],
+      ["M17 25 C16 15 18 5 24 5 Q28 9 32 7 Q36 9 40 5 C46 5 48 15 47 25 Q32 27 17 25 Z", "#b8843a"],
+      ["M32 8 Q31 14 32 19", "none", "#8a5a1e"],
+      ["M16.6 20 Q32 22.5 47.4 20 L47.2 24.4 Q32 26.6 16.8 24.4 Z", "#3b2412"],
+    ]) {
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", P(d)); path.setAttribute("fill", fill);
+      if (stroke) { path.setAttribute("stroke", stroke); path.setAttribute("stroke-width", (1.6 * u).toFixed(1)); path.setAttribute("stroke-linecap", "round"); }
+      g.append(path);
+    }
+    g.setAttribute("transform", `rotate(-7 ${x} ${cy})`);   // tipped back a little
+    return outer;
+  }
+  function hat(on) {
+    const t = root.querySelector(".tri.clear");
+    if (!t) return;
+    const head = t.querySelector(".head");
+    let h = head.querySelector(".hat");
+    if (on && !h) {
+      h = drawHat(t); head.append(h);
+      if (!reduce.matches && h.animate) h.animate([{ transform: "translateY(-40px)", opacity: 0 }, { transform: "translateY(3px)", opacity: 1, offset: .75 }, { transform: "none", opacity: 1 }],
+        { duration: 420, easing: "ease-out" });
+    } else if (!on && h) {
+      if (!reduce.matches && h.animate) h.animate([{ transform: "none", opacity: 1 }, { transform: "translateY(-30px)", opacity: 0 }], { duration: 220, easing: "ease-in" }).onfinish = () => h.remove();
+      else h.remove();
+    }
+  }
+
   mood("idle");
-  window.HeaderArt = { mood };
+  window.HeaderArt = { mood, hat };
 })();

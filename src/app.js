@@ -83,6 +83,7 @@
     $("limits").innerHTML = rs.headline.map(h => `<div class="limit"><b>${esc(h.big)}</b><span>${esc(h.small)}</span></div>`).join("");
     $("rbProgram").textContent = rs.program;
     $("navRule").textContent = rs.state === "Federal hemp" ? "Federal hemp" : `${rs.state} · ${rs.market}`;
+    window.HeaderArt?.hat(rs.stateCode === "TX");      // the tall trichome wears a cowboy hat for Texas
     $("rbMeta").textContent = `${rs.regulator} · rules verified ${new Date(rs.verified + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
     // sample tones follow the selected rules
     for (const b of sWrap.children) {
