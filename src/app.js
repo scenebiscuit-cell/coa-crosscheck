@@ -267,6 +267,7 @@
   const store = {
     get(k) { try { return localStorage.getItem("coa." + k); } catch { return null; } },
     set(k, v) { try { localStorage.setItem("coa." + k, v); } catch { /* storage blocked: settings just aren't remembered */ } },
+    remove(k) { try { localStorage.removeItem("coa." + k); } catch { /* storage blocked */ } },
   };
   const VISION_NAME = /(vl\b|vl:|vision|llava|gemma3|minicpm-v|moondream|qwen3-vl|mistral-small3\.[12])/i;
   state.local = null;   // { url, model, vision }
@@ -279,55 +280,151 @@
   function readerName() { return imageReader() === "local" ? state.local.model : "Claude"; }
   function useOllama() { return !!state.local && $("useLocal").checked; }
 
+  /* ---------- Ask about this result: local Ollama, Claude, or an OpenAI-compatible service ---------- */
+  state.askWith = "local";
+  let askCtl = null;   // the running question's AbortController; the Stop button uses it
+
+  const cloudValue = (id) => $(id).value.trim();
+  function cloudConfig(w) {
+    return w === "claude" ? { apiKey: cloudValue("claudeKey"), model: cloudValue("claudeModel") }
+      : { apiKey: cloudValue("openaiKey"), model: cloudValue("openaiModel"), baseUrl: cloudValue("openaiBase") };
+  }
+  function askReady(w = state.askWith) {
+    if (w === "local") return useOllama();
+    const c = cloudConfig(w);
+    return !!(c.apiKey && c.model && (w === "claude" || c.baseUrl));
+  }
+  function askModelName(w) { return w === "local" ? state.local?.model : cloudConfig(w).model; }
+  function providerName(w) {
+    if (w === "claude") return "Anthropic";
+    try { return new URL(cloudValue("openaiBase")).host; } catch { return "your OpenAI-compatible provider"; }
+  }
+  // keys must never show up in a message, even one the provider sends back
+  function scrubKeys(msg) {
+    let s = String(msg);
+    for (const id of ["claudeKey", "openaiKey"]) { const k = cloudValue(id); if (k.length > 5) s = s.split(k).join("[key hidden]"); }
+    return s;
+  }
+
   function updateAsk() {
     if (!$("askForm")) return;
-    const on = useOllama();
-    $("askQ").disabled = !on; $("askBtn").disabled = !on;
-    $("askState").textContent = on ? state.local.model : "Local AI off";
+    const w = state.askWith, on = askReady(w), busy = !!askCtl;
+    $("askWith").value = w;
+    $("askQ").disabled = !on; $("askBtn").disabled = !on || busy;
+    $("askState").textContent = on ? askModelName(w) : (w === "local" ? "Local AI off" : "Add your key");
     $("askState").dataset.on = on ? "1" : "";
-    if (!on && !$("askOut").dataset.used) $("askOut").innerHTML = `<p class="ask-note">Connect a local AI model under <b>Use a local AI model</b> to ask questions in plain language. Answers use only this report and the selected rulebook, and stay on your computer.</p>`;
-    else if (on && !$("askOut").dataset.used) $("askOut").innerHTML = `<p class="ask-note">Try: <button type="button" class="suggest">Which finding matters most?</button> <button type="button" class="suggest">Explain the THC math</button></p>`;
-    $("askOut").querySelectorAll(".suggest").forEach(b => b.onclick = () => { $("askQ").value = b.textContent; askLocal(); });
+    $("askNotice").hidden = w === "local";
+    if (w !== "local") $("askNotice").textContent = `Your question, this report, and the COA's results are sent to ${providerName(w)} under your account. Their usage charges apply.`;
+    if ($("askOut").dataset.used) return;
+    $("askOut").innerHTML = on
+      ? `<p class="ask-note">Try: <button type="button" class="suggest">Which finding matters most?</button> <button type="button" class="suggest">Explain the THC math</button></p>`
+      : w === "local"
+        ? `<p class="ask-note">Connect a local AI model under <b>Use a local AI model</b> to ask questions in plain language. Answers use only this report and the selected rulebook, and stay on your computer.</p>`
+        : `<p class="ask-note">Add your ${w === "claude" ? "Anthropic" : "provider"} API key${w === "openai" ? ", base URL, and model" : ""} under <b>Use a cloud AI model</b> to ask questions in plain language. Answers use only this report and the selected rulebook.</p>`;
+    $("askOut").querySelectorAll(".suggest").forEach(b => b.onclick = () => { $("askQ").value = b.textContent; askQuestion(); });
   }
 
-  async function askLocal() {
-    const q = $("askQ").value.trim();
-    if (!q || !useOllama()) return;
-    const { url, model } = state.local, rs = state.ruleset, r = state.result, d = state.data;
-    const context = {
-      rules: { jurisdiction: rs.state, market: rs.market, program: rs.program, totalThc: rs.totalThcText,
-        limits: (rs.limits || []).map(l => ({ label: l.label, max: l.mg ?? l.grams, unit: l.grams != null ? "g" : "mg", effective: l.effective || null, source: l.cite.text })),
-        labelVariance: rs.labelVariance?.text || null },
-      product: d.product, lab: d.lab.name, verdict: r.verdict,
-      thc: r.meters.map(m => ({ label: m.label, value: m.value, limit: m.limit, how: m.how, alt: m.alt })),
-      findings: r.checks.map(c => ({ status: c.status, title: c.title, detail: c.detail, source: c.cite?.text || null })),
-      cannabinoids: d.cannabinoids.map(c => `${c.name} ${c.raw ?? c.value} ${c.unit || ""}`.trim()),
-    };
-    const prompt = `You help a cannabis compliance reviewer understand an automated COA check. Answer the question in 2 to 5 plain sentences using ONLY the JSON below. Name the rule source when you cite a limit. If the data doesn't answer the question, say so. Don't give legal advice or invent rules.
+  // each streamer calls onText(everything so far) and returns { text, refusal, truncated }
+  async function streamLocal(am, signal, onText) {
+    const { url, model } = state.local;
+    let resp;
+    try {
+      resp = await fetch(url + "/api/chat", { method: "POST", signal, body: JSON.stringify({ model, stream: true, keep_alive: "10m",
+        messages: [{ role: "system", content: am.system }, ...am.messages], options: { temperature: 0.2, num_ctx: 16384 } }) });
+    } catch (e) { throw e.name === "AbortError" ? e : new Error(`Lost the connection to Ollama at ${url}.`); }
+    if (!resp.ok) throw new Error((await resp.text()).slice(0, 160));
+    const reader = resp.body.getReader(), dec = new TextDecoder(); let buf = "", text = "";
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true }); const lines = buf.split("\n"); buf = lines.pop();
+      for (const line of lines) { if (!line.trim()) continue; const j = JSON.parse(line); if (j.error) throw new Error(j.error); text += j.message?.content || ""; }
+      onText(text);
+    }
+    return { text };
+  }
 
-Question: ${q}
+  async function streamCloud(w, am, signal, onText) {
+    const cfg = cloudConfig(w);
+    const req = CORE.askRequest(w, cfg, am);   // throws a plain-language Error for a missing key, model, or unsafe address
+    let resp;
+    try {
+      // the key goes only in req.headers, and only to the provider the visitor chose
+      resp = await fetch(req.url, { method: "POST", headers: req.headers, body: req.body, signal, credentials: "omit", referrerPolicy: "no-referrer" });
+    } catch (e) {
+      if (e.name === "AbortError") throw e;
+      throw new Error(`Your browser couldn't reach ${req.host}. Check your internet connection and the address. If both are right, the service may not allow requests made straight from a web page (a CORS block), and this site can't work around that.`);
+    }
+    if (!resp.ok) throw new Error(CORE.askErrorMessage(w, resp.status, (await resp.text()).slice(0, 2000), cfg.model));
+    const parse = w === "claude" ? CORE.anthropicStreamEvent : CORE.openaiStreamEvent;
+    const reader = resp.body.getReader(), dec = new TextDecoder(); let buf = "", text = "", refusal = false, truncated = false;
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break;
+      const split = CORE.sseSplit(buf + dec.decode(value, { stream: true })); buf = split.rest;
+      for (const ev of split.events) {
+        const r = parse(ev);
+        if (r.error) throw new Error(`${providerName(w)} stopped the answer: ${r.error}`);
+        if (r.text) text += r.text;
+        if (r.refusal) refusal = true;
+        if (r.truncated) truncated = true;
+      }
+      onText(text);
+    }
+    return { text, refusal, truncated };
+  }
 
-Data:
-${JSON.stringify(context).slice(0, 24000)}`;
+  async function askQuestion() {
+    const q = $("askQ").value.trim(), w = state.askWith;
+    if (!q || !askReady(w) || askCtl) return;
+    const am = CORE.askMessages(CORE.askContext({ ruleset: state.ruleset, result: state.result, data: state.data }), q);
     const out = $("askOut"); out.dataset.used = "1";
     out.innerHTML = `<p class="ask-q">${esc(q)}</p><p class="ask-a" id="askA">Thinking…</p>`;
-    $("askBtn").disabled = true;
+    askCtl = new AbortController();
+    $("askStop").hidden = false; updateAsk();
+    let text = "";
+    const onText = (t) => { text = t; $("askA").textContent = t || "Thinking…"; };
     try {
-      const resp = await fetch(url + "/api/chat", { method: "POST", body: JSON.stringify({ model, stream: true, keep_alive: "10m",
-        messages: [{ role: "user", content: prompt }], options: { temperature: 0.2, num_ctx: 16384 } }) });
-      if (!resp.ok) throw new Error((await resp.text()).slice(0, 160));
-      const reader = resp.body.getReader(), dec = new TextDecoder(); let buf = "", text = "";
-      for (;;) {
-        const { value, done } = await reader.read(); if (done) break;
-        buf += dec.decode(value, { stream: true }); const lines = buf.split("\n"); buf = lines.pop();
-        for (const line of lines) { if (!line.trim()) continue; const j = JSON.parse(line); if (j.error) throw new Error(j.error); text += j.message?.content || ""; }
-        $("askA").textContent = text || "Thinking…";
-      }
-      $("askA").textContent = text.trim() || "The model didn't return an answer. Try rephrasing.";
+      const r = await (w === "local" ? streamLocal : streamCloud.bind(null, w))(am, askCtl.signal, onText);
+      text = r.text.trim();
+      $("askA").textContent = text || (r.refusal ? "The model declined to answer this question." : "The model didn't return an answer. Try rephrasing.");
+      if (text && r.refusal) $("askA").textContent += "\n\n(The model stopped early and declined to finish.)";
+      if (text && r.truncated) $("askA").textContent += "\n\n(The answer hit the length limit and was cut off.)";
     } catch (e) {
-      $("askA").textContent = e instanceof TypeError ? `Lost the connection to Ollama at ${url}.` : `The model couldn't answer: ${e.message}`;
-    } finally { $("askBtn").disabled = !useOllama(); }
+      $("askA").textContent = e.name === "AbortError" ? (text.trim() ? text.trim() + "\n\n(Stopped.)" : "Stopped.") : scrubKeys(w === "local" ? `The model couldn't answer: ${e.message}` : e.message);
+    } finally {
+      askCtl = null; $("askStop").hidden = true; updateAsk();
+    }
   }
+
+  /* ---------- cloud AI panel: keys stay in this tab unless "Remember on this device" is on ---------- */
+  const CLOUD_FIELDS = ["claudeKey", "claudeModel", "openaiKey", "openaiModel", "openaiBase"];
+  function saveCloud() { for (const id of CLOUD_FIELDS) store.set("cloud." + id, $(id).value); store.set("cloud.remember", "1"); }
+  function forgetCloud() { for (const id of CLOUD_FIELDS) store.remove("cloud." + id); store.remove("cloud.remember"); }
+  function updateCloudState() {
+    const any = askReady("claude") || askReady("openai");
+    $("cloudState").textContent = any ? "Ready" : "Off";
+    $("cloudState").dataset.on = any ? "1" : "";
+  }
+  if (store.get("cloud.remember") === "1") {
+    for (const id of CLOUD_FIELDS) { const v = store.get("cloud." + id); if (v) $(id).value = v; }
+    $("cloudRemember").checked = true;
+  }
+  updateCloudState();
+  for (const id of CLOUD_FIELDS) $(id).addEventListener("input", () => {
+    if ($("cloudRemember").checked) saveCloud();
+    updateCloudState(); updateAsk();
+  });
+  $("cloudRemember").onchange = () => {
+    const el = $("cloudStatus"); el.classList.remove("err");
+    if ($("cloudRemember").checked) {
+      saveCloud();
+      const kept = store.get("cloud.remember") === "1";
+      if (!kept) { $("cloudRemember").checked = false; el.classList.add("err"); }
+      el.textContent = kept ? "Saved on this device. Turn this off to delete it." : "This browser blocked saving, so your keys will only be kept until you close or reload this tab.";
+    } else {
+      forgetCloud();
+      el.textContent = "Deleted from this device. Your keys stay in this tab until you close or reload it.";
+    }
+  };
 
   function refreshRunLabel() {
     if (useOllama()) {
@@ -686,10 +783,18 @@ ${JSON.stringify(context).slice(0, 24000)}`;
         </details>
         <section class="ask" aria-labelledby="ask-h">
           <div class="ask-head"><h3 id="ask-h">Ask about this result</h3><span class="lstate" id="askState">Local AI off</span></div>
+          <div class="askwith"><label for="askWith">Answer with</label>
+            <select id="askWith">
+              <option value="local">Local model (Ollama)</option>
+              <option value="claude">Claude (your Anthropic API key)</option>
+              <option value="openai">OpenAI-compatible (your key)</option>
+            </select></div>
+          <p class="fetchnote cloudnotice" id="askNotice" hidden></p>
           <form id="askForm" class="askrow">
             <label class="sr" for="askQ">Your question</label>
             <input id="askQ" type="text" autocomplete="off" placeholder="Why does this fail in California but not Missouri?">
             <button type="submit" class="btn" id="askBtn">Ask</button>
+            <button type="button" class="btn" id="askStop" hidden>Stop</button>
           </form>
           <div class="ask-out" id="askOut" aria-live="polite"></div>
         </section>
@@ -723,7 +828,10 @@ ${JSON.stringify(context).slice(0, 24000)}`;
     for (const id of ["f-form", "f-cat", "f-ctype", "f-size", "f-sizeu", "f-units", "f-net", "f-netu"]) $(id).addEventListener("input", upd);
     $("copy").onclick = copyFindings;
     bindShare();
-    $("askForm").addEventListener("submit", (e) => { e.preventDefault(); askLocal(); });
+    $("askForm").addEventListener("submit", (e) => { e.preventDefault(); askQuestion(); });
+    $("askWith").value = state.askWith;
+    $("askWith").onchange = () => { state.askWith = $("askWith").value; updateAsk(); };
+    $("askStop").onclick = () => askCtl?.abort();
     updateAsk();
   }
 

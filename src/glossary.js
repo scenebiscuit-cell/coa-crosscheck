@@ -76,6 +76,7 @@ const GLOSSARY = (() => {
     "oral": ["Oral products", "Edibles, tinctures, and capsules."],
     "topical": ["Topical products", "Lotions, balms, and patches applied to the skin."],
     "coa": ["COA", "Certificate of analysis: a lab's report of what's in a batch and whether it passed required tests."],
+    "apikey": ["API key", "A long secret code from an AI company that lets this page use your account with them. Anyone who has it can spend your credit, so don't share it or paste it on sites you don't trust."],
     "dry_weight": ["Dry weight", "A result adjusted to remove the sample's water content. It reads higher than an as-received result."],
   };
 

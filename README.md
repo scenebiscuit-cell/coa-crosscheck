@@ -86,15 +86,29 @@ The interface follows the 2026 trends that suit a professional tool ([Figma](htt
 - **Native view transitions** when switching rulebooks, and **purposeful micro-interactions** only where state changes. All motion turns off for people who've asked their device for reduced motion.
 - **Bento layout** for the report summary and the rulebook.
 - **Dark mode with a manual toggle** (system, light, dark).
-- **Conversational AI:** an "Ask about this result" box answers questions in plain language using a local model, and only from the report and the selected rulebook.
+- **Conversational AI:** an "Ask about this result" box answers questions in plain language using a local model, or Claude or an OpenAI-compatible service with your own API key, and only from the report and the selected rulebook.
 
 ## Use a local AI model (Ollama)
 
-The built-in parser handles simple layouts and many common lab layouts. For any layout, including scanned PDFs and photos, connect a model running on your own computer. The COA never leaves your machine. Once connected, the **Ask about this result** box also uses the model to answer questions about the report.
+The built-in parser handles simple layouts and many common lab layouts. For any layout, including scanned PDFs and photos, connect a model running on your own computer. The COA never leaves your machine. Once connected, the **Ask about this result** box can also use the model to answer questions about the report (choose **Local model** under **Answer with**).
 
 1. Install [Ollama](https://ollama.com), then `ollama pull qwen2.5:14b` (optionally `ollama pull qwen2.5vl:7b` for photos and scans).
 2. Allow the site: in PowerShell, `setx OLLAMA_ORIGINS "https://scenebiscuit-cell.github.io"`, then quit and restart Ollama. This isn't needed when the page runs from `http://localhost`.
 3. Open **Use a local AI model** on the page and click **Connect**.
+
+## Ask with a cloud AI
+
+The **Ask about this result** box can answer with Claude, or with OpenAI or any OpenAI-compatible service such as OpenRouter. It uses *your own* API key: there is no server and no key of ours, and the page calls the provider directly from your browser.
+
+1. Get an API key from [Anthropic](https://console.anthropic.com), [OpenAI](https://platform.openai.com), or [OpenRouter](https://openrouter.ai).
+2. Open **Use a cloud AI model** on the page and paste the key. Claude defaults to `claude-haiku-5-5`; for an OpenAI-compatible service, also enter the base URL (OpenAI's is prefilled) and a model name.
+3. In the Ask box, pick **Answer with** Claude or OpenAI-compatible, then ask. **Stop** cancels an answer in progress.
+
+What to know:
+
+- **What's sent:** your question, the report, and the COA's results go to the provider you picked, under your account, and their usage charges apply. Nothing goes anywhere else. The built-in checker and the shopper card never use your key.
+- **Where the key lives:** in this browser tab's memory, gone when you close or reload the tab. **Remember on this device** saves it in this browser's storage in plain text, so leave it off on a shared computer.
+- **If it fails:** the page explains a wrong key, a rate limit or spending cap, or a wrong model name. If the browser blocks the request outright, the service doesn't allow calls straight from a web page.
 
 ## Continue development
 
