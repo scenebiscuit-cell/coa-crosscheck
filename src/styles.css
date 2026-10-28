@@ -431,10 +431,16 @@ details.share .inner { gap: 14px; }
 /* hold: sad eyes and a tear */
 .crew .tear { fill: #9ad8ff; stroke: #ffffff; stroke-width: .6; opacity: 0; transition: opacity .3s ease; }
 .band-art[data-mood="hold"] .tear { opacity: .95; }
+/* clear: an excited face. happy eyes, rosy cheeks, and sparkles that twinkle */
+.crew .blush { fill: #ff8fa3; opacity: 0; transition: opacity .3s ease; }
+.band-art[data-mood="clear"] .blush { opacity: .5; }
+.crew .spark { fill: #fff6c9; opacity: 0; transform-box: fill-box; transform-origin: 50% 50%; transition: opacity .3s ease; }
+.band-art[data-mood="clear"] .spark { opacity: .95; animation: crew-twinkle 1.6s ease-in-out infinite; }
+@keyframes crew-twinkle { 50% { transform: scale(.55) rotate(20deg); opacity: .55; } }
 .band-art.react .fg .head { animation: crew-hop .45s cubic-bezier(.3,1.6,.5,1); }
 .band-art.react .milky .head { animation-delay: .06s; } .band-art.react .amber .head { animation-delay: .12s; }
 @keyframes crew-hop { 40% { transform: translateY(-8px); } }
-@media (prefers-reduced-motion: reduce) { .crew .head, .crew .eye { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .crew .head, .crew .eye, .crew .spark { animation: none !important; } }
 @media (max-width: 760px) {
   .band-in { grid-template-columns: minmax(0, 1fr); }
   .band-art { order: -1; justify-content: flex-end; margin: -10px 0 -6px; }

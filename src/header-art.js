@@ -1,8 +1,9 @@
 /* Header art: three trichomes (clear, milky, amber) that watch the pointer, blink, and react to the verdict.
    Decorative only: hidden from screen readers, no focus stops, and no idle motion when the visitor
    prefers reduced motion. Exposes window.HeaderArt.mood("clear" | "review" | "hold" | "idle")
-   and window.HeaderArt.hat("cowboy" | "fedora" | false), which puts a hat on the tall clear trichome:
-   a cowboy hat for Texas, an old-school black government fedora for federal hemp. hat(true) means "cowboy". */
+   and window.HeaderArt.hat(kind | false), which dresses the tall clear trichome for the state:
+   "cowboy" (Texas), "fedora" (federal hemp), "beanie" (Colorado), "captain" (Missouri riverboat cap),
+   "bear" (a California grizzly cub on its head). hat(true) means "cowboy". */
 (function () {
   "use strict";
   const root = document.getElementById("crew");
@@ -81,6 +82,12 @@
       tear.setAttribute("d", `M${tx} ${ty - s * 1.5} Q${tx + s * 1.05} ${ty - s * 0.1} ${tx} ${ty + s} Q${tx - s * 1.05} ${ty - s * 0.1} ${tx} ${ty - s * 1.5}Z`);
       g.append(tear);
     }
+    // a rosy cheek under each eye's outer corner; CSS shows it only for Clear
+    const blush = document.createElementNS(NS_, "ellipse");
+    blush.setAttribute("class", "blush");
+    blush.setAttribute("cx", (x - side * r * 0.45).toFixed(2)); blush.setAttribute("cy", (y + r * 1.35).toFixed(2));
+    blush.setAttribute("rx", (r * 0.75).toFixed(2)); blush.setAttribute("ry", (r * 0.42).toFixed(2));
+    g.parentNode.insertBefore(blush, g);
     return { x, y, r, side, shape, line };
   });
   function setLids(kind) {
@@ -105,6 +112,18 @@
     }
   }
 
+  /* ---------- sparkles around each head for Clear ---------- */
+  const STAR = (x, y, s) => `M${x} ${y - s} Q${x + s * .18} ${y - s * .18} ${x + s} ${y} Q${x + s * .18} ${y + s * .18} ${x} ${y + s} Q${x - s * .18} ${y + s * .18} ${x - s} ${y} Q${x - s * .18} ${y - s * .18} ${x} ${y - s}Z`;
+  for (const t of tris) {
+    const x = +t.dataset.hx, y = +t.dataset.hy, r = +t.dataset.hr;
+    [[1.08, -0.62, 0.3], [-1.12, -0.2, 0.22], [0.98, 0.42, 0.17]].forEach(([dx, dy, s], i) => {
+      const p = document.createElementNS(NS_, "path");
+      p.setAttribute("class", "spark"); p.style.animationDelay = (i * 0.25) + "s";
+      p.setAttribute("d", STAR(x + dx * r, y + dy * r, s * r));
+      t.querySelector(".head").append(p);
+    });
+  }
+
   /* ---------- mood follows the verdict ---------- */
   // mouths are drawn relative to each trichome's own size
   const MOUTH = {
@@ -127,7 +146,7 @@
     if (m !== "idle" && !reduce.matches) { root.classList.remove("react"); void root.getBoundingClientRect(); root.classList.add("react"); }
   }
 
-  /* ---------- hats: a cowboy hat for Texas, a government fedora for federal hemp ---------- */
+  /* ---------- hats: one per state, on the tall clear trichome ---------- */
   // each hat is drawn on the same 64-unit grid as the favicon: [path, fill, stroke]
   const HATS = {
     cowboy: { tilt: -7, parts: [
@@ -143,6 +162,37 @@
       ["M32 9.5 Q30.8 14 32 18.5", "none", "#14161a"],
       ["M15.3 19.5 Q32 22 48.7 19.5 L48.6 23.6 Q32 26 15.4 23.6 Z", "#101214"],
       ["M44 20.6 L46.6 20.3 L46.6 23.4 L44 23.7 Z", "#4a5059"],
+    ] },
+    // Colorado: a ski beanie in the flag's blue, white, red, and gold
+    beanie: { tilt: -6, parts: [
+      ["M14 24 C14 12 22 6 32 6 C42 6 50 12 50 24 Z", "#2456a6"],
+      ["M15.2 16.5 Q32 12.6 48.8 16.5 L49.6 19.8 Q32 16.2 14.4 19.8 Z", "#f4f1e8"],
+      ["M12.5 21 Q32 18 51.5 21 L51.5 28 Q32 25.5 12.5 28 Z", "#c8312f"],
+      ["M18 20.6 L18 26.9 M25 19.8 L25 26.2 M32 19.6 L32 26 M39 19.8 L39 26.2 M46 20.6 L46 26.9", "none", "#9e2220"],
+      ["M27 3.5 Q27 -1.5 32 -1.5 Q37 -1.5 37 3.5 Q37 8.5 32 8.5 Q27 8.5 27 3.5 Z", "#f3c12b"],
+    ] },
+    // Missouri: a riverboat captain's cap, for the Mississippi and Mark Twain
+    captain: { tilt: -4, parts: [
+      ["M9 12 Q32 3 55 12 Q53 17.5 46.5 19.5 L17.5 19.5 Q11 17.5 9 12 Z", "#f4f1e8", "#a9a496"],
+      ["M17 19 L47 19 L47.6 25 Q32 26.6 16.4 25 Z", "#1b1d24"],
+      ["M14.5 24.4 Q32 27 49.5 24.4 Q46.5 31 32 31 Q17.5 31 14.5 24.4 Z", "#0f1014"],
+      ["M17.2 23.6 Q32 25.3 46.8 23.6", "none", "#d9a93b"],
+      ["M28.6 12.6 L35.4 12.6 L36.4 16.2 L32 18 L27.6 16.2 Z", "#d9a93b"],
+    ] },
+    // California: a grizzly cub (the state animal, from the flag) hanging on to the top of the head
+    bear: { tilt: 0, parts: [
+      ["M19.6 8 Q18.6 1.4 24.4 1.6 Q28.4 2.8 26.8 7.6 Z", "#7a4b2a"],
+      ["M44.4 8 Q45.4 1.4 39.6 1.6 Q35.6 2.8 37.2 7.6 Z", "#7a4b2a"],
+      ["M21.4 6.4 Q21.2 3.2 24 3.5 Q25.8 4.5 25.1 6.6 Z", "#b9824f"],
+      ["M42.6 6.4 Q42.8 3.2 40 3.5 Q38.2 4.5 38.9 6.6 Z", "#b9824f"],
+      ["M19.5 15.5 Q19.5 4 32 4 Q44.5 4 44.5 15.5 Q44.5 26.5 32 26.5 Q19.5 26.5 19.5 15.5 Z", "#7a4b2a"],
+      ["M26.4 19 Q26.4 15 32 15 Q37.6 15 37.6 19 Q37.6 23 32 23 Q26.4 23 26.4 19 Z", "#d4a26b"],
+      ["M29.8 16.6 Q32 15.6 34.2 16.6 Q33.6 18.6 32 19 Q30.4 18.6 29.8 16.6 Z", "#2a1a12"],
+      ["M30.2 20.6 Q32 22 33.8 20.6", "none", "#2a1a12"],
+      ["M25.4 11.6 Q25.4 9.8 26.9 9.8 Q28.4 9.8 28.4 11.6 Q28.4 13.4 26.9 13.4 Q25.4 13.4 25.4 11.6 Z", "#1d1533"],
+      ["M35.6 11.6 Q35.6 9.8 37.1 9.8 Q38.6 9.8 38.6 11.6 Q38.6 13.4 37.1 13.4 Q35.6 13.4 35.6 11.6 Z", "#1d1533"],
+      ["M14.5 26.5 Q14 21.5 19 21.8 Q22.2 23.2 21.2 27.6 Q17.6 28.8 14.5 26.5 Z", "#6a3f22"],
+      ["M49.5 26.5 Q50 21.5 45 21.8 Q41.8 23.2 42.8 27.6 Q46.4 28.8 49.5 26.5 Z", "#6a3f22"],
     ] },
   };
   // drawn to fit the trichome's own size; fills are set here so no stylesheet is needed

@@ -87,8 +87,10 @@
     $("limits").innerHTML = rs.headline.map(h => `<div class="limit"><b>${esc(h.big)}</b><span>${esc(h.small)}</span></div>`).join("");
     $("rbProgram").textContent = rs.program;
     $("navRule").textContent = rs.state === "Federal hemp" ? "Federal hemp" : `${rs.state} · ${rs.market}`;
-    // the tall trichome wears a cowboy hat for Texas and a black government fedora for federal hemp
-    window.HeaderArt?.hat(rs.stateCode === "TX" ? "cowboy" : rs.stateCode === "US" ? "fedora" : false);
+    // the tall trichome dresses for the state: cowboy hat (TX), government fedora (federal hemp),
+    // ski beanie (CO), riverboat captain's cap (MO), and a grizzly cub on its head (CA)
+    const HATS = { TX: "cowboy", US: "fedora", CO: "beanie", MO: "captain", CA: "bear" };
+    window.HeaderArt?.hat(HATS[rs.stateCode] || false);
     $("rbMeta").textContent = `${rs.regulator} · rules verified ${new Date(rs.verified + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
     // sample tones follow the selected rules
     for (const b of sWrap.children) {
