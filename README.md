@@ -81,6 +81,8 @@ When a COA is still misread, the self-checks flag it and every field can be corr
 
 The interface follows the 2026 trends that suit a professional tool ([Figma](https://www.figma.com/resource-library/web-design-trends/), [Envato](https://elements.envato.com/learn/web-design-trends), [We.inc](https://we.inc/blog/website-design-trends-2026)) and skips the decorative ones (3D, maximalism, retrofuturism):
 
+- **A playful header for a tedious job:** three abstract vector trichomes, in the clear, milky, and amber colors growers watch for, follow the cursor with their eyes, blink, and react to each verdict (happy for Clear, raised brow for Review, worried for Hold). They're decorative and hidden from screen readers, and they stay still for people who prefer reduced motion.
+- **Color-coded test categories:** each kind of test (cannabinoids, solvents, pesticides, microbials, metals, and more) has its own hue and a larger, bolder heading, so a long COA is quicker to scan. Every hue passes WCAG AA contrast in both themes.
 - **Accessibility as a baseline:** passes an automated WCAG 2.2 AA audit (axe-core) in light and dark themes, with a skip link, visible focus, keyboard-reachable tooltips, and 24 px minimum tap targets.
 - **Frosted sticky section nav** with a scroll-progress line driven by CSS scroll timelines.
 - **Native view transitions** when switching rulebooks, and **purposeful micro-interactions** only where state changes. All motion turns off for people who've asked their device for reduced motion.

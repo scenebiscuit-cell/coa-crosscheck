@@ -127,7 +127,9 @@
         ${e.map(([k, v]) => `<tr><td>${esc(pretty(k))}</td><td class="num">${v} ppm</td></tr>`).join("")}</tbody></table></div>${cite(rs.pesticides.cite)}</details>`;
     })() : "";
     const prof = rs.profile ? `<h4>Required cannabinoid profile</h4><p class="rbnote">${rs.profile.keys.map(k => tip(rs.profile.labels[k], k)).join(", ")}. ${esc(rs.profile.note)}${cite(rs.profile.cite)}</p>` : "";
-    const panel = rs.panel ? `<ul class="rblist">${rs.panel.items.map(it => `<li>${tip(it.label, ["potency", "thc", "cbd"].includes(it.key) ? "potency" : it.key === "water_activity" ? "water_activity" : it.key)}${it.level === "review" ? " <span class=\"soon\">confirm</span>" : ""}${it.when ? " <span class=\"soon\">some products</span>" : ""}</li>`).join("")}</ul>${cite(rs.panel.cite)}${rs.panel.note ? `<p class="rbnote">${esc(rs.panel.note)}</p>` : ""}`
+    // each required test gets its category color (see [data-cat] in styles.css)
+    const catOf = (k) => ["potency", "thc", "cbd"].includes(k) ? "potency" : k === "mold" ? "microbials" : k === "water_activity" ? "moisture" : k;
+    const panel = rs.panel ? `<ul class="rblist">${rs.panel.items.map(it => `<li data-cat="${catOf(it.key)}">${tip(it.label, ["potency", "thc", "cbd"].includes(it.key) ? "potency" : it.key === "water_activity" ? "water_activity" : it.key)}${it.level === "review" ? " <span class=\"soon\">confirm</span>" : ""}${it.when ? " <span class=\"soon\">some products</span>" : ""}</li>`).join("")}</ul>${cite(rs.panel.cite)}${rs.panel.note ? `<p class="rbnote">${esc(rs.panel.note)}</p>` : ""}`
       : `<p class="rbnote">${esc(rs.panelNote || "")}</p>`;
     $("rulebook").innerHTML = `
       <div class="rb-head"><div><div class="eyebrow">Rulebook</div><h2>${esc(rs.state === "Federal hemp" ? "Federal hemp" : rs.state)} <span>${esc(rs.market)}</span></h2></div>
@@ -138,8 +140,8 @@
           <h4>How ${tip("Total THC", "total_thc")} is counted</h4><p class="rbnote">${esc(rs.totalThcText)}</p>${rs.altThc ? `<p class="rbnote"><span class="soon">unconfirmed</span> ${esc(rs.altThc.note)}</p>` : ""}
           ${rs.labelVariance ? `<h4>${tip("Label variance", "label_variance")}</h4><p class="rbnote">${esc(rs.labelVariance.text)}${cite(rs.labelVariance.cite)}</p>` : ""}</section>
         <section><h3>Required tests</h3>${panel}${prof}${solv}${pest}</section>
-        ${rs.metals || rs.panel ? `<section><h3>${tip("Heavy metals", "heavy_metals")}</h3>${metals}</section>` : ""}
-        ${micro || myco || water ? `<section><h3>${tip("Microbials", "microbials")} and ${tip("mycotoxins", "mycotoxins")}</h3>${micro}${myco}${water ? `<h4>${tip("Water activity", "water_activity")}</h4>${water}` : ""}</section>` : ""}
+        ${rs.metals || rs.panel ? `<section><h3 data-cat="heavy_metals">${tip("Heavy metals", "heavy_metals")}</h3>${metals}</section>` : ""}
+        ${micro || myco || water ? `<section><h3 data-cat="microbials">${tip("Microbials", "microbials")} and ${tip("mycotoxins", "mycotoxins")}</h3>${micro}${myco}${water ? `<h4>${tip("Water activity", "water_activity")}</h4>${water}` : ""}</section>` : ""}
         ${rs.synthetic ? `<section><h3>Cannabinoid origin</h3><p class="rbnote">${esc(rs.synthetic.text)}${rs.synthetic.effective ? ` Effective ${new Date(rs.synthetic.effective + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.` : ""}${rs.synthetic.status === "warn" ? " The checker flags these for review." : ""}${cite(rs.synthetic.cite)}</p></section>` : ""}
       </div>
       <p class="rb-sources">Sources: ${rs.sources.map(c => `<a href="${c.url}" target="_blank" rel="noopener">${esc(c.text)}</a>`).join(" · ")}</p>`;
@@ -846,6 +848,7 @@
     const head = { hold: ["Hold", `Fails ${where}. Don't release until the failures are resolved.`], review: ["Review", `No hard failures under ${where}, but some items need a person to confirm.`], clear: ["Clear", `Nothing on this COA conflicts with the ${where} checked here.`] }[r.verdict];
     const pills = ["fail", "warn", "pass", "info"].filter(k => r.counts[k]).map(k => `<span class="pill ${k}">${r.counts[k]} ${{ fail: "fail", warn: "to review", pass: "pass", info: "note" }[k]}${(k === "fail" || k === "info") && r.counts[k] > 1 ? "s" : ""}</span>`).join("");
     const changed = $("verdict").dataset.v !== r.verdict || $("verdict").dataset.rs !== rs.id;
+    if (changed) window.HeaderArt?.mood(r.verdict);     // the header trichomes react to the verdict
     $("verdict").dataset.v = r.verdict; $("verdict").dataset.rs = rs.id;
     if (changed) { $("verdict").classList.remove("settle"); void $("verdict").offsetWidth; $("verdict").classList.add("settle"); }
     $("verdict").innerHTML = `<div class="stamp">${head[0]}</div><div class="vtext"><div class="eyebrow">${esc(rs.state === "Federal hemp" ? "Federal hemp" : rs.state + " · " + rs.market)}</div><h3>${esc(p.name || "Unnamed product")}</h3><p>${esc(head[1])}</p><div class="counts">${pills}</div></div>`;
@@ -894,10 +897,10 @@
       }).join("");
       const stt = pn.status === "not tested" ? "nt" : pn.status;
       const label = CORE.CATEGORY_LABEL[pn.category] || pn.name;
-      return `<div><div class="ptitle">${tip(label, GLOSSARY.has(pn.category) ? pn.category : null)} <span class="mini ${stt}">${esc(pn.status)}</span></div>
+      return `<div class="catblock" data-cat="${esc(pn.category)}"><div class="ptitle">${tip(label, GLOSSARY.has(pn.category) ? pn.category : null)} <span class="mini ${stt}">${esc(pn.status)}</span></div>
         ${rows ? `<div class="tbl"><table><thead><tr><th>Analyte</th><th>Result</th><th>${tip("Limit", "action_level")}</th><th>Unit</th></tr></thead><tbody>${rows}</tbody></table></div>` : ""}</div>`;
     }).join("");
-    $("tables").innerHTML = `<div><div class="ptitle">Cannabinoids <span class="sub"><span class="thcmark">●</span> counted toward ${tip("Total THC", "total_thc")} under these rules</span></div>
+    $("tables").innerHTML = `<div class="catblock" data-cat="potency"><div class="ptitle">Cannabinoids <span class="sub"><span class="thcmark">●</span> counted toward ${tip("Total THC", "total_thc")} under these rules</span></div>
       <div class="tbl"><table><thead><tr><th>Cannabinoid</th><th>Result</th><th>Unit</th></tr></thead><tbody>${cRows}</tbody></table></div></div>${pHtml || "<p class='status'>No contaminant panels found.</p>"}`;
     updateShare();
   }
