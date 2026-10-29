@@ -857,6 +857,7 @@
     const pills = ["fail", "warn", "pass", "info"].filter(k => r.counts[k]).map(k => `<span class="pill ${k}">${r.counts[k]} ${{ fail: "fail", warn: "to review", pass: "pass", info: "note" }[k]}${(k === "fail" || k === "info") && r.counts[k] > 1 ? "s" : ""}</span>`).join("");
     const changed = $("verdict").dataset.v !== r.verdict || $("verdict").dataset.rs !== rs.id;
     if (changed) window.HeaderArt?.mood(r.verdict);     // the header trichomes react to the verdict
+    window.HeaderArt?.body?.(r.formClass);              // the small scrolling copy takes the product's shape
     $("verdict").dataset.v = r.verdict; $("verdict").dataset.rs = rs.id;
     if (changed) { $("verdict").classList.remove("settle"); void $("verdict").offsetWidth; $("verdict").classList.add("settle"); }
     $("verdict").innerHTML = `<div class="stamp">${head[0]}</div><div class="vtext"><div class="eyebrow">${esc(rs.state === "Federal hemp" ? "Federal hemp" : rs.state + " · " + rs.market)}</div><h3>${esc(p.name || "Unnamed product")}</h3><p>${esc(head[1])}</p><div class="counts">${pills}</div></div>`;
