@@ -463,3 +463,15 @@ details.share .inner { gap: 14px; }
 .rblist li[data-cat]::before { content: ""; position: absolute; left: -16px; top: .5em; width: 9px; height: 9px; border-radius: 3px; background: var(--c); }
 .rblist li[data-cat] > .term:first-child { font-weight: 700; color: var(--c); }
 .rb-grid h3[data-cat] { color: var(--c); }
+
+/* ---------- the mini trichome: a small copy of the tall one once the header has scrolled away ---------- */
+.band-art.crew-mini { display: block; flex: none; order: 0; margin: 0 0 0 auto; width: 40px; height: 40px; pointer-events: none;
+  opacity: 0; transform: translateY(-6px) scale(.7); transition: opacity .25s ease, transform .3s cubic-bezier(.3,1.5,.5,1); }
+.band-art.crew-mini.show { opacity: 1; transform: none; }
+.crew-mini .crew { width: 100%; max-width: none; height: 100%; overflow: visible; }
+.crew-mini .mini-bg { fill: var(--band); stroke: #f6f1e8; stroke-width: 3; }
+.crew-mini ~ .secnav-rule { margin-left: 0; }
+/* on pages without a sticky nav it sits in the bottom corner, clear of the content's edge */
+.band-art.crew-mini.corner { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 30; width: 52px; height: 52px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
+@media (prefers-reduced-motion: reduce) { .band-art.crew-mini { transition: opacity .2s linear; transform: none; } }
