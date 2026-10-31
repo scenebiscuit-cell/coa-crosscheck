@@ -59,7 +59,7 @@ Reading a COA is fuzzy, because every lab formats it differently. Judging compli
 - **`src/glossary.js`** holds the tooltip explanations.
 - **`src/app.js`** is the interface.
 - **`embed/`** has the shopper card (`coa-card.js`) and the page that opens results links (`card.html`).
-- **`tests/`** has 71 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
+- **`tests/`** has 72 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
 
 Adding a state means adding one rulebook object and its tests. The engine doesn't change.
 
