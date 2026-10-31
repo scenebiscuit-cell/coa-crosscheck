@@ -59,7 +59,7 @@ Reading a COA is fuzzy, because every lab formats it differently. Judging compli
 - **`src/glossary.js`** holds the tooltip explanations.
 - **`src/app.js`** is the interface.
 - **`embed/`** has the shopper card (`coa-card.js`) and the page that opens results links (`card.html`).
-- **`tests/`** has 50 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in four common lab layouts (`tests/fixtures/`).
+- **`tests/`** has 71 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
 
 Adding a state means adding one rulebook object and its tests. The engine doesn't change.
 
@@ -71,6 +71,9 @@ No state standardizes the COA layout, so the built-in parser doesn't expect one.
 - section headers with a status, one-line summaries, and summary grids
 - sideways cannabinoid tables and row tables with LOD, LOQ, and several result columns
 - units in column headers or in a units row
+- PDFs whose text is stored out of reading order, letter-spaced, or with superscripts (the reader rebuilds the lines both by position and in drawing order, and keeps the one it reads more from)
+- table headers that wrap, stack one word per line, or have no section title, and two tables side by side
+- totals printed over their labels, label rows over value rows, and chart legends beside a table
 - text copied from a PDF viewer, where columns are separated by single spaces
 - CSV exports from lab software
 - chemical names (Tetrahydrocannabinolic acid) as well as abbreviations (THCA)
