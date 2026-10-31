@@ -101,3 +101,16 @@ The rules can be right and the reading still wrong. Before relying on a verdict:
 3. **Recompute one THC number by hand** per COA (mg/g × grams per serving) and match it to the meter.
 4. **Check that the verdict makes sense to you** as a compliance reviewer. Where it doesn't, the cause is either a reading error (fix the parser or the prompt) or a rule question (update this file).
 5. **Record the results** (for example, "17 of 20 read correctly"). That's the accuracy figure to cite on a resume.
+
+### Results
+
+**October 31, 2026: 12 real COAs from 8 labs** (flower, concentrate, edible, beverage, tincture, and topical; Texas, Missouri, Colorado, California, and federal hemp).
+
+| | Before | After |
+|---|---|---|
+| Read with the built-in parser (text PDFs) | 0 of 9 | 9 of 9 potency results and totals; 7 of 9 every field |
+| Scanned PDFs (no text layer) | 0 of 3 | 0 of 3: need the AI reader |
+
+- **What fixed it:** rebuilding PDF text in reading order, letter-spaced and superscript text, wrapped, stacked, untitled, and side-by-side table headers, totals printed over their labels, label rows over value rows, and chart legends and addresses next to tables. Each layout has a fictional copy in `tests/fixtures/`.
+- **Still partial:** one letter-spaced report reads its values correctly, but names lose the spaces between words and the lab name isn't found. One edible's COA only says "Infused," so its product type has to be picked by hand.
+- **Rule question to confirm:** California's rulebook lists residual solvents for every product, so a flower COA without that test gets a Hold. Check whether 4 CCR §15714 (now DCC) requires residual solvent testing for dried flower before changing it.
