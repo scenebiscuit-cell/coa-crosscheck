@@ -210,3 +210,39 @@ test("layout: package size from mg/unit and mg/package columns, or one serving/p
   const one = CORE.parseText("SAMPLE: Example Flower\nSERVING/PACKAGE SIZE: 1 G / 3.5 G\nBatch #: EF-1\n");
   assert.deepEqual([one.product.unit_size, one.product.unit_size_unit, one.product.net_content, one.product.net_content_unit], [1, "g", 3.5, "g"]);
 });
+
+/* A microbial table whose last column names wrap one word per line ("Pass /" / "Fail" / "Action" / "Level"),
+   an organism name that wraps before its result, "Not Present" results, and analyst IDs under the table. */
+test("layout: wrapped column names and organism names, Not Present results", () => {
+  const d = fixture("wrapped-micro-table.txt");
+  const stec = analyte(d, "microbials", "SHIGA TOXIN PRODUCING ESCHERICHIA COLI STEC");
+  assert.ok(stec, "the wrapped organism name is one row");
+  assert.deepEqual([stec.result, stec.status], ["Not Present", "pass"]);
+  assert.equal(analyte(d, "microbials", "TOTAL YEAST AND MOLD").limit, "10000");   // the Action Level column
+  assert.ok(!panel(d, "microbials").analytes.some((a) => /^\d/.test(a.name)), "analyst IDs aren't a result");
+  const r = CORE.evaluate(d, RULES.byId("MO"), { today: TODAY });
+  assert.notEqual(check(r, "results")?.status, "fail");          // "Not Present" isn't a detection
+  assert.equal(check(r, "micro")?.status, "pass");
+});
+
+/* Potency per unit with per-weight columns beside it, a serving smaller than the "unit", and the lab
+   named in a footer that ends "LLC. | address". */
+test("layout: per-unit potency keeps its per-weight value; serving vs unit mass", () => {
+  const d = CORE.parseText([
+    "SAMPLE NAME: Example Bites",
+    "Unit Mass: 120 grams per Unit",
+    "Serving Size: 4 grams per Serving",
+    "Cannabinoid Potency",
+    "ANALYTE   LOD/LOQ (mg/g)   WEIGHT %   MG/G   MG/UNIT",
+    "d9-THC   0.06/0.19   0.0450   0.450   54.000",
+    "CBD   0.06/0.19   0.9000   9.000   1080.000",
+    "Example Labs California LLC. | 1 Example Street, Santa Cruz, CA 95060",
+  ].join("\n"));
+  assert.deepEqual([can(d, "d9").value, can(d, "d9").unit], [54, "mg/unit"]);
+  assert.deepEqual(can(d, "d9").mass, { value: 0.45, raw: "0.450", unit: "mg/g" });
+  assert.deepEqual([d.product.unit_size, d.product.net_content], [4, 120]);   // the serving is the dose
+  assert.equal(d.lab.name, "Example Labs California LLC");
+  const r = CORE.evaluate(d, RULES.byId("US-HEMP"), { today: TODAY });
+  assert.notEqual(check(r, "hempconc")?.status ?? "", "warn", "the 0.3% dry-weight test can run");
+  assert.ok(!r.checks.some((c) => /Can't check Δ9-THC by dry weight/.test(c.title)));
+});
