@@ -170,11 +170,16 @@ test("MO: concentrates and vapes are capped by weight, 24 g per package", () => 
   assert.equal(check(evalData(data(3.5), "MO"), "lim-pkg"), undefined);
 });
 
-test("CA: residual solvents and foreign material are required for every sample, flower included", () => {
+// Foreign material is required for every sample (§15714). Residual solvents are not required for dried
+// flower: §15718(a) tests "cannabis product or pre-rolls" (this test used to expect them for flower too).
+test("CA: foreign material is required for every sample; residual solvents for pre-rolls, not flower", () => {
   const r = evalData({ product: { form: "Flower" }, cannabinoids: [{ name: "THCA", value: 20, unit: "%" }],
     panels: [{ category: "heavy_metals", name: "Heavy metals", status: "pass", analytes: [] }] }, "CA-AU");
-  assert.match(check(r, "panel").title, /Residual solvents/);
+  assert.doesNotMatch(check(r, "panel").title, /Residual solvents/);
   assert.match(check(r, "panel").title, /Foreign material/);
+  const pr = evalData({ product: { form: "Pre-Roll" }, cannabinoids: [{ name: "THCA", value: 20, unit: "%" }],
+    panels: [{ category: "heavy_metals", name: "Heavy metals", status: "pass", analytes: [] }] }, "CA-AU");
+  assert.match(check(pr, "panel").title, /Residual solvents/);
 });
 
 test("MO: capsules need a water activity result; CA capsules don't", () => {
@@ -290,3 +295,4 @@ test("card: shows the concentrate type next to the category", () => {
   assert.equal(card.product.concentrateType, "Live Resin Badder");
   assert.equal(CORE.toCard(sample("flower"), { ruleset: RULES.byId("CA-AU") }).product.concentrateType, undefined);
 });
+
