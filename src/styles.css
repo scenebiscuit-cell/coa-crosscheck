@@ -255,7 +255,7 @@ tr.bad td { color: var(--fail); font-weight: 700; }
   background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%; background-size: 6px 6px; background-repeat: no-repeat; cursor: pointer; }
 .picker select:focus-visible { outline: 3px solid var(--band-hi); outline-offset: 2px; }
 .picker select option, .picker select optgroup { color: #0d1c25; background: #ffffff; }
-.picker-meta { display: flex; flex-direction: column; font-size: 12.5px; color: var(--band-soft); line-height: 1.35; min-width: 0; }
+.picker-meta { flex-basis: 100%; display: flex; flex-direction: column; font-size: 12.5px; color: var(--band-soft); line-height: 1.35; min-width: 0; }
 .picker-meta span:first-child { color: var(--band-ink); font-weight: 600; }
 .band .limits { margin-top: 20px; }
 .limit span { max-width: 190px; }
