@@ -23,6 +23,7 @@ const RULES = (() => {
     metals: L("4 CCR §15723", "https://law.cornell.edu/regulations/california/4-CCR-15723"),
     water: L("4 CCR §15717", "https://www.law.cornell.edu/regulations/california/4-CCR-15717"),
     testing: L("4 CCR §15714 (required testing)", "https://www.law.cornell.edu/regulations/california/4-CCR-15714"),
+    solvents: L("4 CCR §15718(a)", "https://www.law.cornell.edu/regulations/california/4-CCR-15718"),
   };
   const CO = {
     testing: L("1 CCR 212-3, Rule 4-115", "https://www.law.cornell.edu/regulations/colorado/1-CCR-212-3-4-115"),
@@ -98,7 +99,7 @@ const RULES = (() => {
 
   const caBase = (market) => ({
     state: "California", stateCode: "CA", regulator: "Department of Cannabis Control (DCC)",
-    verified: "2026-10-25",
+    verified: "2026-11-02",
     totalThcKeys: D9_THCA,
     totalThcText: "THC + THCA × 0.877 (§15724). Δ8 and other isomers are reported separately; the checker shows them in the self-checks.",
     panel: {
@@ -109,7 +110,9 @@ const RULES = (() => {
         { key: "microbials", label: "Microbial impurities", cite: CA.micro },
         { key: "mycotoxins", label: "Mycotoxins", cite: CA.myco },
         { key: "pesticides", label: "Residual pesticides" },
-        { key: "residual_solvents", label: "Residual solvents and processing chemicals" },
+        // §15718(a): the lab analyzes "cannabis product or pre-rolls", so dried flower isn't tested for solvents
+        { key: "residual_solvents", label: "Residual solvents and processing chemicals", cite: CA.solvents,
+          when: (fc, form) => fc !== "smokable" || /pre-?roll|joint|blunt/i.test(form || "") },
         { key: "foreign_matter", label: "Foreign material" },
         { key: "water_activity", label: "Water activity", when: (fc, form) => fc === "smokable" || (["edible", "ode"].includes(fc) && !/beverage|drink|liquid|syrup/i.test(form || "")), cite: CA.water },
       ],
