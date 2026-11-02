@@ -175,7 +175,7 @@ const RULES = (() => {
     {
       id: "TX-MED", state: "Texas", stateCode: "TX", market: "Medical", program: "Texas Compassionate Use Program (TCUP)",
       regulator: "Texas Department of Public Safety", verified: "2026-10-25",
-      headline: [{ big: "10 mg", small: "THC per dosage unit" }, { big: "1 g", small: "THC per package or device" }],
+      headline: [{ big: "10 mg", small: "THC per serving (dosage unit)" }, { big: "1 g", small: "THC per package or device" }],
       totalThcKeys: ALL_THC,
       totalThcText: "All tetrahydrocannabinols: Δ9 + Δ8 + Δ10 + exo-THC + THCA × 0.877. The statute caps \"tetrahydrocannabinols,\" not only Δ9-THC.",
       limits: [
@@ -207,7 +207,7 @@ const RULES = (() => {
     {
       id: "MO", state: "Missouri", stateCode: "MO", market: "Medical & adult-use", program: "Missouri medical and adult-use marijuana",
       regulator: "Division of Cannabis Regulation (DCR)", verified: "2026-10-25",
-      headline: [{ big: "2,400 mg", small: "THC per infused-product package (3 oz equivalent)" }, { big: "0.5 ppm", small: "Lead limit, all products" }],
+      headline: [{ big: "No cap", small: "THC per serving (none in this rulebook)" }, { big: "2,400 mg", small: "THC per package (infused products, 3 oz equivalent)" }],
       totalThcKeys: D9_THCA,
       altThc: { keys: ["d9"], label: "Δ9-THC only",
         note: "Missouri's rule says \"800 mg of THC\" without defining which THC. The checker computes both total THC (THC + THCA × 0.877) and Δ9-THC only, and asks for review when they land on opposite sides of the limit." },
@@ -260,7 +260,7 @@ const RULES = (() => {
     }),
     Object.assign(coBase("Medical"), {
       id: "CO-MED", program: "Colorado medical marijuana",
-      headline: [{ big: "±15%", small: "Label potency tolerance (over 2.5 mg/serving)" }, { big: "0.2 ppm", small: "Arsenic limit, inhaled" }],
+      headline: [{ big: "No cap", small: "THC per serving (medical edibles)" }, { big: "No cap", small: "THC per package (medical edibles)" }],
       limits: [],
       limitsNote: "Colorado sets no per-serving or per-package THC cap for medical edibles. The product must match its labeled THC within the potency variance.",
     }),
@@ -287,7 +287,7 @@ const RULES = (() => {
     {
       id: "US-HEMP", state: "Federal hemp", stateCode: "US", market: "Hemp-derived products (all states)", program: "Federal hemp definition",
       regulator: "Federal law (USDA / FDA); states add their own rules", verified: "2026-10-25",
-      headline: [{ big: "0.4 mg", small: "Total THC per container (from Dec 11, 2026)" }, { big: "0.3%", small: "Total THC, dry weight" }],
+      headline: [{ big: "No cap", small: "THC per serving (no federal limit)" }, { big: "0.4 mg", small: "Total THC per container (from Dec 11, 2026)" }],
       totalThcKeys: ALL_THC,
       totalThcText: "Total THC includes Δ9-THC, THCA (× 0.877), and other cannabinoids with similar effects, such as Δ8.",
       limits: [
