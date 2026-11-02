@@ -24,7 +24,7 @@ The owner knows HTML and CSS well and is still learning JavaScript. Explain Java
 | File | What it holds | Notes |
 |---|---|---|
 | `src/core.js` | Parser (`parseText`, `joinLine`), AI extraction prompt and schema, the "Ask about this result" helpers (`askContext`, `askMessages`, `askRequest`, `askErrorMessage`, `sseSplit`, `anthropicStreamEvent`, `openaiStreamEvent`), THC math (`thcMath`), rules engine (`evaluate`) | Pure functions, no DOM, no network. Exports `CORE` for the browser and Node. The ask helpers sit after the shared parser block, so they are not synced to the Texas repo. |
-| `src/rules.js` | One rulebook per jurisdiction as plain data: limits, required panels, contaminant tables, citations, `verified` dates | Adding a state means adding a rulebook and tests. The engine shouldn't need changes. |
+| `src/rules.js` | One rulebook per jurisdiction as plain data: limits, required panels, contaminant tables, citations, `verified` dates | Adding a state means adding a rulebook and tests. The engine shouldn't need changes. The two cards under the rulebook picker come from these limits (`limitCards` in `core.js`) for the product type shown; a limit's optional `card` only rewords its card. |
 | `src/glossary.js` | Tooltip explanations for underlined terms | Plain language, one or two sentences. |
 | `src/samples.js` | Fictional sample COAs for the sample buttons | |
 | `src/app.js` | The interface: rulebook picker, file upload with pdf.js, local Ollama reader, the Ask box with local, Claude, and OpenAI-compatible answers (visitor's own API key), report rendering, tooltips, theme | The only file that touches the DOM. API keys stay in memory unless "Remember on this device" is on; never put one in a URL, a log, or the shopper card. |
