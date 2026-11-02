@@ -82,9 +82,22 @@
     transition(() => { renderRuleset(); if (state.data) renderResults(); });
   };
 
+  // The two cards follow the product type: edibles until the visitor picks a sample or uploads a COA,
+  // then that COA's category (the Category menu under the results can change it).
+  function renderCards() {
+    const rs = state.ruleset, d = state.chosen && state.data;
+    const fc = (d && (d.product.category || CORE.formClass(d.product.form))) || "edible";
+    $("limits").innerHTML = CORE.limitCards(rs, fc).map(h => `<div class="limit"><b>${esc(h.big)}</b><span>${esc(h.small)}</span></div>`).join("");
+    // name the type shown, and give the concentrate limit when concentrates aren't the type on the cards
+    const conc = CORE.limitCards(rs, "concentrate")[1];
+    const concText = conc.big === "Not allowed" ? "not allowed" : conc.big === "No cap" ? "no THC cap per package"
+      : `${conc.big} ${conc.small.replace(/^Concentrate per/, "per").replace(/^Total/, "total")}`;   // "24 g per package (no THC cap)"
+    $("limitsFor").textContent = `Showing ${CORE.TYPE_PLURAL[fc]}${d ? " (this COA's product type)" : ""}.` + (fc === "concentrate" ? "" : ` Concentrates: ${concText}.`);
+  }
+
   function renderRuleset() {
     const rs = state.ruleset;
-    $("limits").innerHTML = rs.headline.map(h => `<div class="limit"><b>${esc(h.big)}</b><span>${esc(h.small)}</span></div>`).join("");
+    renderCards();
     $("rbProgram").textContent = rs.program;
     $("navRule").textContent = rs.state === "Federal hemp" ? "Federal hemp" : `${rs.state} · ${rs.market}`;
     // the tall trichome dresses for the state: cowboy hat (TX), government fedora (federal hemp),
@@ -865,6 +878,7 @@
     // loaded on arrival leaves them with a neutral face
     if (state.chosen && (changed || !state.reacted)) { window.HeaderArt?.mood(r.verdict); state.reacted = true; }
     if (state.chosen) window.HeaderArt?.body?.(r.formClass);   // the small scrolling copy takes the product's shape
+    renderCards();   // the limit cards follow the product type, including a change in the Category menu
     $("verdict").dataset.v = r.verdict; $("verdict").dataset.rs = rs.id;
     if (changed) { $("verdict").classList.remove("settle"); void $("verdict").offsetWidth; $("verdict").classList.add("settle"); }
     $("verdict").innerHTML = `<div class="stamp">${head[0]}</div><div class="vtext"><div class="eyebrow">${esc(rs.state === "Federal hemp" ? "Federal hemp" : rs.state + " · " + rs.market)}</div><h3>${esc(p.name || "Unnamed product")}</h3><p>${esc(head[1])}</p><div class="counts">${pills}</div></div>`;

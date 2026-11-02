@@ -296,3 +296,27 @@ test("card: shows the concentrate type next to the category", () => {
   assert.equal(CORE.toCard(sample("flower"), { ruleset: RULES.byId("CA-AU") }).product.concentrateType, undefined);
 });
 
+
+// The two cards under the rulebook picker come from each rulebook's own limits, for the product type shown.
+test("limit cards follow the product type", () => {
+  const cards = (rs, fc, today = TODAY) => CORE.limitCards(RULES.byId(rs), fc, today).map((c) => c.big);
+  // California: edibles 10 mg / 100 mg; concentrates 1,000 mg per package (4 CCR §17304(c)), 2,000 mg medical (§17304(d))
+  assert.deepEqual(cards("CA-AU", "edible"), ["10 mg", "100 mg"]);
+  assert.deepEqual(cards("CA-AU", "concentrate"), ["No cap", "1,000 mg"]);
+  assert.deepEqual(cards("CA-MED", "concentrate"), ["No cap", "2,000 mg"]);
+  assert.deepEqual(cards("CA-AU", "smokable"), ["No cap", "No cap"]);
+  // Colorado's 10 mg / 100 mg caps are for edibles only
+  assert.deepEqual(cards("CO-AU", "edible"), ["10 mg", "100 mg"]);
+  assert.deepEqual(cards("CO-AU", "concentrate"), ["No cap", "No cap"]);
+  // Missouri caps concentrates by weight (24 g, the 3 oz equivalent), not by THC
+  const mo = CORE.limitCards(RULES.byId("MO"), "concentrate", TODAY);
+  assert.equal(mo[1].big, "24 g");
+  assert.match(mo[1].small, /no THC cap/);
+  assert.deepEqual(cards("MO", "edible"), ["No cap", "2,400 mg"]);
+  // Texas: no flower, and the inhaled dose is set by the prescription
+  assert.deepEqual(cards("TX-MED", "smokable"), ["Not allowed", "Not allowed"]);
+  assert.equal(cards("TX-MED", "inhalation")[0], "Prescribed");
+  // federal hemp: the "from Dec 11, 2026" note drops off once the cap is in effect
+  assert.match(CORE.limitCards(RULES.byId("US-HEMP"), "edible", TODAY)[1].small, /from Dec 11, 2026/);
+  assert.doesNotMatch(CORE.limitCards(RULES.byId("US-HEMP"), "edible", "2026-12-12")[1].small, /from/);
+});

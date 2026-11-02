@@ -175,7 +175,6 @@ const RULES = (() => {
     {
       id: "TX-MED", state: "Texas", stateCode: "TX", market: "Medical", program: "Texas Compassionate Use Program (TCUP)",
       regulator: "Texas Department of Public Safety", verified: "2026-10-25",
-      headline: [{ big: "10 mg", small: "THC per serving (dosage unit)" }, { big: "1 g", small: "THC per package or device" }],
       totalThcKeys: ALL_THC,
       totalThcText: "All tetrahydrocannabinols: Δ9 + Δ8 + Δ10 + exo-THC + THCA × 0.877. The statute caps \"tetrahydrocannabinols,\" not only Δ9-THC.",
       limits: [
@@ -207,7 +206,6 @@ const RULES = (() => {
     {
       id: "MO", state: "Missouri", stateCode: "MO", market: "Medical & adult-use", program: "Missouri medical and adult-use marijuana",
       regulator: "Division of Cannabis Regulation (DCR)", verified: "2026-10-25",
-      headline: [{ big: "No cap", small: "THC per serving (none in this rulebook)" }, { big: "2,400 mg", small: "THC per package (infused products, 3 oz equivalent)" }],
       totalThcKeys: D9_THCA,
       altThc: { keys: ["d9"], label: "Δ9-THC only",
         note: "Missouri's rule says \"800 mg of THC\" without defining which THC. The checker computes both total THC (THC + THCA × 0.877) and Δ9-THC only, and asks for review when they land on opposite sides of the limit." },
@@ -218,9 +216,9 @@ const RULES = (() => {
       limits: [
         { id: "pkg", scope: "pkg", mg: 2400, forms: ["edible", "tincture", "capsule", "ode", "topical", "suppository", "other"], label: "THC per package (3 oz equivalent)", cite: MO.pkg,
           note: "Missouri sets no per-serving THC cap. A package can't exceed 3 ounces of dried marijuana or its equivalent, and 800 mg of THC in infused products equals 1 ounce." },
-        { id: "pkgw", scope: "weight", grams: 24, forms: ["concentrate", "inhalation"], label: "Concentrate per package (3 oz equivalent)", cite: MO.pkg,
+        { id: "pkgw", scope: "weight", grams: 24, forms: ["concentrate", "inhalation"], label: "Concentrate per package (3 oz equivalent)", cite: MO.pkg, card: { small: "Concentrate per package (no THC cap)" },
           note: "For concentrates, 8 g equals 1 ounce of dried marijuana, so a package can hold at most 24 g." },
-        { id: "pkgf", scope: "weight", grams: 85.05, forms: ["smokable"], label: "Flower per package (3 oz)", cite: MO.pkg,
+        { id: "pkgf", scope: "weight", grams: 85.05, forms: ["smokable"], label: "Flower per package (3 oz)", cite: MO.pkg, card: { big: "3 oz", small: "Flower per package (no THC cap)" },
           note: "A package can't exceed 3 ounces (85.05 g) of dried, unprocessed marijuana. That covers flower and pre-rolls." },
       ],
       panel: {
@@ -252,7 +250,6 @@ const RULES = (() => {
     },
     Object.assign(coBase("Adult-use (retail)"), {
       id: "CO-AU", program: "Colorado retail marijuana",
-      headline: [{ big: "10 mg", small: "THC per serving (edibles)" }, { big: "100 mg", small: "THC per package (edibles)" }],
       limits: [
         { id: "serving", scope: "unit", mg: 10, forms: ["edible", "capsule", "ode"], label: "THC per serving", cite: CO.potency },
         { id: "pkg", scope: "pkg", mg: 100, forms: ["edible", "capsule", "ode"], label: "THC per package", cite: CO.potency },
@@ -260,13 +257,11 @@ const RULES = (() => {
     }),
     Object.assign(coBase("Medical"), {
       id: "CO-MED", program: "Colorado medical marijuana",
-      headline: [{ big: "No cap", small: "THC per serving (medical edibles)" }, { big: "No cap", small: "THC per package (medical edibles)" }],
       limits: [],
       limitsNote: "Colorado sets no per-serving or per-package THC cap for medical edibles. The product must match its labeled THC within the potency variance.",
     }),
     Object.assign(caBase("Adult-use"), {
       id: "CA-AU", program: "California adult-use cannabis",
-      headline: [{ big: "10 mg", small: "THC per serving (edibles)" }, { big: "100 mg", small: "THC per package (edibles)" }],
       limits: [
         { id: "serving", scope: "unit", mg: 10, forms: ["edible", "ode"], label: "THC per serving", cite: CA.limits },
         { id: "pkg", scope: "pkg", mg: 100, forms: ["edible", "ode"], label: "THC per package", cite: CA.limits },
@@ -275,25 +270,23 @@ const RULES = (() => {
     }),
     Object.assign(caBase("Medicinal"), {
       id: "CA-MED", program: "California medicinal cannabis",
-      headline: [{ big: "10 mg", small: "THC per serving (edibles)" }, { big: "2,000 mg", small: "THC per package (medical concentrates and topicals)" }],
       limits: [
         { id: "serving", scope: "unit", mg: 10, forms: ["edible", "ode"], label: "THC per serving", cite: CA.limits },
         { id: "pkg", scope: "pkg", mg: 100, forms: ["edible"], label: "THC per package", cite: CA.limits },
-        { id: "pkgo", scope: "pkg", mg: 500, forms: ["ode"], label: "THC per package (orally dissolving, medical only)", cite: CA.limits },
-        { id: "pkgc", scope: "pkg", mg: 2000, forms: ["concentrate", "topical", "tincture", "capsule", "inhalation"], label: "THC per package (medical concentrates and topicals)", cite: CA.limits },
+        { id: "pkgo", scope: "pkg", mg: 500, forms: ["ode"], label: "THC per package (orally dissolving, medical only)", cite: CA.limits, card: { small: "THC per package (medical label only)" } },
+        { id: "pkgc", scope: "pkg", mg: 2000, forms: ["concentrate", "topical", "tincture", "capsule", "inhalation"], label: "THC per package (medical concentrates and topicals)", cite: CA.limits, card: { small: "THC per package (medical label only)" } },
       ],
       limitsNote: "Medical-only limits apply only when the package is labeled \"FOR MEDICAL USE ONLY\" and sold to medicinal-use customers.",
     }),
     {
       id: "US-HEMP", state: "Federal hemp", stateCode: "US", market: "Hemp-derived products (all states)", program: "Federal hemp definition",
       regulator: "Federal law (USDA / FDA); states add their own rules", verified: "2026-10-25",
-      headline: [{ big: "No cap", small: "THC per serving (no federal limit)" }, { big: "0.4 mg", small: "Total THC per container (from Dec 11, 2026)" }],
       totalThcKeys: ALL_THC,
       totalThcText: "Total THC includes Δ9-THC, THCA (× 0.877), and other cannabinoids with similar effects, such as Δ8.",
       limits: [
-        { id: "pkg", scope: "pkg", mg: 0.4, forms: "*", exceptForms: ["smokable"], label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11",
+        { id: "pkg", scope: "pkg", mg: 0.4, forms: "*", exceptForms: ["smokable"], label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11", card: { small: "Total THC per container" },
           note: "Until December 11, 2026, hemp is defined by Δ9-THC at or under 0.3% on a dry-weight basis." },
-        { id: "pkgf", scope: "pkg", mg: 0.4, forms: ["smokable"], review: true, label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11",
+        { id: "pkgf", scope: "pkg", mg: 0.4, forms: ["smokable"], review: true, label: "Total THC per container", cite: HEMP.def, effective: "2026-12-11", card: { small: "THC per container, flower under review" },
           note: "The 0.4 mg cap applies to final hemp-derived cannabinoid products. Whether retail flower counts as one is unsettled until FDA guidance on \"containers\", so this is flagged for review, not failed. Flower must meet 0.3% total THC (THCA included) either way." },
       ],
       hempConcentration: { pct: 0.3, cite: HEMP.def },

@@ -1158,6 +1158,36 @@ Text inside the report data, such as product names, lab names, and finding detai
   const routeOf = (fc) => fc === "smokable" || fc === "inhalation" || fc === "concentrate" ? "inhaled" : fc === "topical" ? "topical" : "oral";
   const ROUTE_TEXT = { inhaled: "inhaled", oral: "oral", topical: "topical" };
 
+  /* ---------- the two limit cards under the rulebook picker ---------- */
+  // plural names for the line under the cards ("Showing edibles.")
+  const TYPE_PLURAL = { smokable: "flower and pre-rolls", inhalation: "vapes", concentrate: "concentrates", edible: "edibles",
+    tincture: "tinctures", capsule: "capsules and tablets", ode: "orally dissolving products", topical: "topicals",
+    suppository: "suppositories", other: "other products" };
+  // Reads the rulebook's own limits for one product type, so the cards never hold a number the rulebook doesn't.
+  // Returns [serving card, package card], each { big, small }.
+  function limitCards(rs, fc, today = new Date().toISOString().slice(0, 10)) {
+    const applies = (l) => (l.forms === "*" && !(l.exceptForms || []).includes(fc)) || (Array.isArray(l.forms) && l.forms.includes(fc));
+    const lims = (rs.limits || []).filter(applies);
+    const mg = (n) => `${n.toLocaleString("en-US")} mg`;
+    const none = rs.stateCode === "US" ? "no federal limit" : "no state cap";
+    if (rs.forms?.[fc]?.status === "fail")   // e.g. flower under TCUP
+      return [{ big: "Not allowed", small: "THC per serving (can't be dispensed)" }, { big: "Not allowed", small: "THC per package (can't be dispensed)" }];
+    const unit = lims.find(l => l.scope === "unit");
+    const serving = unit ? { big: mg(unit.mg), small: "THC per serving" }
+      : fc === "inhalation" && rs.inhaledDoseByPrescription ? { big: "Prescribed", small: "THC per serving (set by the prescription)" }
+      : { big: "No cap", small: `THC per serving (${none})` };
+    // a THC cap comes first; a package-weight cap (Missouri concentrates and flower) stands in when there's no THC cap
+    const pk = lims.find(l => l.scope === "pkg") || lims.find(l => l.scope === "weight");
+    let pack = { big: "No cap", small: `THC per package (${none})` };
+    if (pk) {
+      // a limit's optional `card` rewords the card ({ big, small }); the number still comes from the limit itself
+      pack = { big: pk.card?.big || (pk.scope === "weight" ? `${pk.grams} g` : mg(pk.mg)), small: pk.card?.small || "THC per package" };
+      if (pk.effective && today < pk.effective)
+        pack.small += ` (from ${new Date(pk.effective + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })})`;
+    }
+    return [serving, pack];
+  }
+
   /* ---------- THC math ---------- */
   const ALL_THC_KEYS = Object.keys(THC_WEIGHT);
   // weights and totalKey let the same math total CBD (CBD + CBDA × 0.877) for the shopper card
@@ -1543,6 +1573,6 @@ Text inside the report data, such as product names, lab names, and finding detai
     return card;
   }
 
-  return { parseText, joinLine, pdfLines, streamLines, pdfText, concentrateType, toCard, CARD_SCHEMA, extractionPrompt, extractionSchema, sanitizeExtraction, askContext, askMessages, sseSplit, anthropicStreamEvent, openaiStreamEvent, askRequest, askErrorMessage, evaluate, thcMath, canonCannabinoid, formClass, routeOf, analyteKey, num, fmt, CATEGORY_LABEL, THC_WEIGHT };
+  return { parseText, joinLine, pdfLines, streamLines, pdfText, concentrateType, toCard, CARD_SCHEMA, extractionPrompt, extractionSchema, sanitizeExtraction, askContext, askMessages, sseSplit, anthropicStreamEvent, openaiStreamEvent, askRequest, askErrorMessage, evaluate, thcMath, canonCannabinoid, formClass, routeOf, limitCards, TYPE_PLURAL, analyteKey, num, fmt, CATEGORY_LABEL, THC_WEIGHT };
 })();
 if (typeof module !== "undefined") module.exports = CORE;

@@ -260,6 +260,7 @@ tr.bad td { color: var(--fail); font-weight: 700; }
 .picker-meta span:first-child { color: var(--band-ink); font-weight: 600; }
 .band .limits { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); }   /* two cards, the same size for every rulebook */
 .limit span { max-width: 190px; }
+.limits-for { margin: 10px 0 0; font-size: 13px; color: var(--band-soft); max-width: 452px; line-height: 1.4; }   /* which product type the cards show */
 
 /* ---------- glossary terms and tooltip ---------- */
 .term { text-decoration: underline dotted; text-decoration-color: color-mix(in srgb, var(--accent) 70%, transparent); text-underline-offset: 3px; text-decoration-thickness: 1.5px; cursor: help; border-radius: 2px; }
