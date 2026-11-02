@@ -207,7 +207,7 @@ const RULES = (() => {
     {
       id: "MO", state: "Missouri", stateCode: "MO", market: "Medical & adult-use", program: "Missouri medical and adult-use marijuana",
       regulator: "Division of Cannabis Regulation (DCR)", verified: "2026-10-25",
-      headline: [{ big: "No cap", small: "THC per serving (none in this rulebook)" }, { big: "2,400 mg", small: "THC per package (infused products, 3 oz equivalent)" }],
+      headline: [{ big: "No cap", small: "THC per serving (no state cap)" }, { big: "2,400 mg", small: "THC per package (infused products, 3 oz equivalent)" }],
       totalThcKeys: D9_THCA,
       altThc: { keys: ["d9"], label: "Δ9-THC only",
         note: "Missouri's rule says \"800 mg of THC\" without defining which THC. The checker computes both total THC (THC + THCA × 0.877) and Δ9-THC only, and asks for review when they land on opposite sides of the limit." },

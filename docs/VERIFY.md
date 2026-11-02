@@ -27,6 +27,8 @@ Source for everything below unless noted: [19 CSR 100-1, current through the 10/
 | Value in the tool | Section | Status | You |
 |---|---|---|---|
 | Package ≤ 3 oz dried marijuana or equivalent | 100-1.120(4) | ✅ | ☐ |
+| No per-serving THC cap (the header card shows "No cap") | Not in 19 CSR 100-1; confirmed by Nick Lax (former DCR compliance), and single 100 mg gummies are sold in Missouri dispensaries | ✅ Reviewer-confirmed, Nov 2, 2026 | ☑ |
+| Watch: HB 2641 (signed April 2026) reclassifies intoxicating hemp products over 0.4 mg THC per container as marijuana from Nov 12, 2026 (hemp beverages Dec 11); they must then be made and sold by DHSS licensees and tested like marijuana | [Bill summary](https://documents.house.mo.gov/billtracking/bills261/sumpdf/HB2641C.pdf); [MJBizDaily, Sept 9, 2026](https://mjbizdaily.com/?p=617984); [Missourinet, Apr 23, 2026](https://www.missourinet.com/2026/04/23/missouri-gov-kehoe-signs-4-bills-into-law-including-ban-on-intoxicating-hemp-products/) | 🟡 No tool change: those products are then checked with this Missouri rulebook. Confirm the final text before adding a hemp-specific check | ☐ |
 | 1 oz = 8 g concentrate = 800 mg THC in infused products → 24 g / 2,400 mg per package | 100-1.010(26) | ✅ | ☐ |
 | Flower and pre-rolls ≤ 3 oz (85.05 g) per package | 100-1.120(4): "shall not be packaged in a manner that exceeds three (3) ounces" of dried, unprocessed marijuana | ✅ | ☐ |
 | ⚖️ Which "THC" the 800 mg means (total vs Δ9 only) | 100-1.010(26) is silent | ⚖️ Tool shows both; ask the Division if it matters | ☐ |
