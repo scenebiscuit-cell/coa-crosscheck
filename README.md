@@ -59,7 +59,7 @@ Reading a COA is fuzzy, because every lab formats it differently. Judging compli
 - **`src/glossary.js`** holds the tooltip explanations.
 - **`src/app.js`** is the interface.
 - **`embed/`** has the shopper card (`coa-card.js`) and the page that opens results links (`card.html`).
-- **`tests/`** has 75 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
+- **`tests/`** has 79 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
 
 Adding a state means adding one rulebook object and its tests. The engine doesn't change.
 
@@ -104,17 +104,18 @@ The built-in parser handles simple layouts and many common lab layouts. For any 
 2. Allow the site: in PowerShell, `setx OLLAMA_ORIGINS "https://scenebiscuit-cell.github.io"`, then quit and restart Ollama. This isn't needed when the page runs from `http://localhost`.
 3. Open **Use a local AI model** on the page and click **Connect**.
 
-## Ask with a cloud AI
+## Read and ask with a cloud AI
 
 The **Ask about this result** box can answer with Claude, or with OpenAI or any OpenAI-compatible service such as OpenRouter. It uses *your own* API key: there is no server and no key of ours, and the page calls the provider directly from your browser.
 
 1. Get an API key from [Anthropic](https://console.anthropic.com), [OpenAI](https://platform.openai.com), or [OpenRouter](https://openrouter.ai).
 2. Open **Use a cloud AI model** on the page and paste the key. Claude defaults to `claude-haiku-5-5`; for an OpenAI-compatible service, also enter the base URL (OpenAI's is prefilled) and a model name.
 3. In the Ask box, pick **Answer with** Claude or OpenAI-compatible, then ask. **Stop** cancels an answer in progress.
+4. To have the cloud model read COAs too, including photos and scanned PDFs, set **Read COAs with** in the cloud panel. The check button then reads "Read with *model* and check". A connected local model still takes priority.
 
 What to know:
 
-- **What's sent:** your question, the report, and the COA's results go to the provider you picked, under your account, and their usage charges apply. Nothing goes anywhere else. The built-in checker and the shopper card never use your key.
+- **What's sent:** when a cloud model reads a COA, the COA's text or page images (up to 5 pages) go to the provider. When you ask, your question, the report, and the COA's results go to the provider you picked, under your account, and their usage charges apply. Nothing goes anywhere else. The built-in checker and the shopper card never use your key.
 - **Where the key lives:** in this browser tab's memory, gone when you close or reload the tab. **Remember on this device** saves it in this browser's storage in plain text, so leave it off on a shared computer.
 - **If it fails:** the page explains a wrong key, a rate limit or spending cap, or a wrong model name. If the browser blocks the request outright, the service doesn't allow calls straight from a web page.
 
