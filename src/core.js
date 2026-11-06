@@ -1134,10 +1134,62 @@ Text inside the report data, such as product names, lab names, and finding detai
     if (status === 404 || (status === 400 && /model/i.test(detail) && /(not found|does not exist|not a valid|invalid|unknown)/i.test(detail))) {
       return `${who} couldn't find the model "${model || ""}". Check the model name in the cloud AI panel.`;
     }
+    // newer Anthropic keys can cover several workspaces; this page doesn't send a workspace ID, so the key has to pick one
+    if (provider === "claude" && status === 400 && /anthropic-workspace-id|not scoped to a workspace/i.test(detail))
+      return "This Anthropic key isn't tied to one workspace, so Anthropic won't say which one to bill. In the Claude Console, create a new key and pick a single workspace (such as Default) when you make it.";
     if (status === 413) return "The report is too large for this model to take in one question.";
     if (status === 429) return `${who} says you've hit a rate limit or a spending cap. Wait a minute and try again; if it keeps happening, check your usage limits with the provider.`;
     if (status >= 500) return `${who} is busy or having a problem right now (error ${status}). Try again in a moment.`;
     return `${who} returned an error (${status})${detail ? ": " + detail : "."}`;
+  }
+
+  /* ---------- reading a COA with a cloud model (the visitor's own key) ---------- */
+  /* provider: "claude" | "openai". prompt: extractionPrompt(). images: base64 JPEG strings (photos or scanned pages).
+     Returns what fetch needs; the key appears only in headers. The answer is one JSON object, so this isn't streamed. */
+  function readRequest(provider, cfg, prompt, images = []) {
+    const key = cleanKey(cfg.apiKey);
+    const model = String(cfg.model || (provider === "claude" ? CLAUDE_DEFAULT_MODEL : "")).trim();
+    if (!model) throw new Error("Enter a model name first.");
+    if (provider === "claude") {
+      const content = [...images.map(data => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data } })), { type: "text", text: prompt }];
+      return {
+        url: CLAUDE_URL, host: "api.anthropic.com",
+        headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        body: JSON.stringify({ model, max_tokens: 16000, messages: [{ role: "user", content }] }),
+      };
+    }
+    if (provider === "openai") {
+      const base = cleanBaseUrl(cfg.baseUrl);
+      const content = images.length
+        ? [{ type: "text", text: prompt }, ...images.map(data => ({ type: "image_url", image_url: { url: "data:image/jpeg;base64," + data } }))]
+        : prompt;   // plain text when there are no images, which more compatible servers accept
+      return {
+        url: base + "/chat/completions", host: new URL(base).host,
+        headers: { "content-type": "application/json", authorization: "Bearer " + key },
+        body: JSON.stringify({ model, messages: [{ role: "user", content }] }),
+      };
+    }
+    throw new Error("Unknown AI provider.");
+  }
+
+  /* The model's reply text from a finished (not streamed) response, and whether it was cut off or refused. */
+  function readResponseText(provider, j) {
+    if (provider === "claude") {
+      const text = (j?.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+      return { text, truncated: j?.stop_reason === "max_tokens", refusal: j?.stop_reason === "refusal" };
+    }
+    const choice = j?.choices?.[0];
+    const c = choice?.message?.content;
+    const text = typeof c === "string" ? c : Array.isArray(c) ? c.map(p => p.text || "").join("") : "";
+    return { text, truncated: choice?.finish_reason === "length", refusal: choice?.finish_reason === "content_filter" || !!choice?.message?.refusal };
+  }
+
+  /* A model's JSON answer, even when it wraps it in a sentence or a ```json fence. null if there's no object. */
+  function looseJson(out) {
+    try { return JSON.parse(out); } catch { /* look for the object inside */ }
+    const a = out.indexOf("{"), b = out.lastIndexOf("}");
+    if (a === -1 || b <= a) return null;
+    try { return JSON.parse(out.slice(a, b + 1)); } catch { return null; }
   }
 
   /* ---------- product form and route ---------- */
@@ -1573,6 +1625,6 @@ Text inside the report data, such as product names, lab names, and finding detai
     return card;
   }
 
-  return { parseText, joinLine, pdfLines, streamLines, pdfText, concentrateType, toCard, CARD_SCHEMA, extractionPrompt, extractionSchema, sanitizeExtraction, askContext, askMessages, sseSplit, anthropicStreamEvent, openaiStreamEvent, askRequest, askErrorMessage, evaluate, thcMath, canonCannabinoid, formClass, routeOf, limitCards, TYPE_PLURAL, analyteKey, num, fmt, CATEGORY_LABEL, THC_WEIGHT };
+  return { parseText, joinLine, pdfLines, streamLines, pdfText, concentrateType, toCard, CARD_SCHEMA, extractionPrompt, extractionSchema, sanitizeExtraction, askContext, askMessages, sseSplit, anthropicStreamEvent, openaiStreamEvent, askRequest, askErrorMessage, readRequest, readResponseText, looseJson, evaluate, thcMath, canonCannabinoid, formClass, routeOf, limitCards, TYPE_PLURAL, analyteKey, num, fmt, CATEGORY_LABEL, THC_WEIGHT };
 })();
 if (typeof module !== "undefined") module.exports = CORE;
