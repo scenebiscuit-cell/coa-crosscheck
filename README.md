@@ -49,7 +49,8 @@ The compliance verdict appears on the card only if the seller confirms they chec
 COA (paste / PDF / photo)  →  reader  →  structured fields  →  rulebook + rules engine  →  verdict + cited findings
                                │                ↑
        built-in parser, or an AI model     user can correct any field
-       (local via Ollama)
+       (local via Ollama, or your own
+        Claude / OpenAI-compatible key)
 ```
 
 Reading a COA is fuzzy, because every lab formats it differently. Judging compliance has to be exact and explainable. So reading and judging are kept apart:
@@ -78,7 +79,7 @@ No state standardizes the COA layout, so the built-in parser doesn't expect one.
 - CSV exports from lab software
 - chemical names (Tetrahydrocannabinolic acid) as well as abbreviations (THCA)
 
-When a COA is still misread, the self-checks flag it and every field can be corrected by hand. Scans and photos need the local AI model. To add a new layout, see [docs/HANDOFF.md](docs/HANDOFF.md).
+When a COA is still misread, the self-checks flag it and every field can be corrected by hand. Scans and photos need an AI model that reads images: a local vision model, or a cloud model with your own key. To add a new layout, see [docs/HANDOFF.md](docs/HANDOFF.md).
 
 ## Design
 
