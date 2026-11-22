@@ -1,5 +1,7 @@
 # COA Crosscheck
 
+[![Tests](https://github.com/scenebiscuit-cell/coa-crosscheck/actions/workflows/test.yml/badge.svg)](https://github.com/scenebiscuit-cell/coa-crosscheck/actions/workflows/test.yml)
+
 **Live demo:** https://scenebiscuit-cell.github.io/coa-crosscheck/
 
 A browser tool that checks a cannabis lab **certificate of analysis (COA)** against the rules of the state where the product will be sold. Pick a rulebook, paste or upload a COA, and get a verdict where every finding cites the rule it comes from. Hover or tap any underlined term for a plain-language explanation.
@@ -63,6 +65,10 @@ Reading a COA is fuzzy, because every lab formats it differently. Judging compli
 - **`tests/`** has 79 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
 
 Adding a state means adding one rulebook object and its tests. The engine doesn't change.
+
+### Tested on real COAs
+
+In October 2026 I ran 12 real COAs from 8 labs through the tool (flower, concentrate, edible, beverage, tincture, and topical, across all five rulebooks) and compared "Lab results as read" to each PDF. Before the parser work, the built-in parser read potency correctly on 0 of the 9 text-based PDFs; after it, 9 of 9, with every field right on 7 of them. The 3 scanned PDFs have no text layer and need an AI model that reads images. The results, what fixed them, and what's still partial are in [docs/VERIFY.md](docs/VERIFY.md#results). The real COAs aren't in the repository; each layout has a fictional copy in `tests/fixtures/`.
 
 ### Reading COAs from different labs
 
