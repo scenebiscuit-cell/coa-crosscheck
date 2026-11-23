@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/scenebiscuit-cell/coa-crosscheck/actions/workflows/test.yml/badge.svg)](https://github.com/scenebiscuit-cell/coa-crosscheck/actions/workflows/test.yml)
 
-**Live demo:** https://scenebiscuit-cell.github.io/coa-crosscheck/
+**Live demo:** https://scenebiscuit.com/coa-crosscheck/
 
 A browser tool that checks a cannabis lab **certificate of analysis (COA)** against the rules of the state where the product will be sold. Pick a rulebook, paste or upload a COA, and get a verdict where every finding cites the rule it comes from. Hover or tap any underlined term for a plain-language explanation.
 
@@ -62,7 +62,7 @@ Reading a COA is fuzzy, because every lab formats it differently. Judging compli
 - **`src/glossary.js`** holds the tooltip explanations.
 - **`src/app.js`** is the interface.
 - **`embed/`** has the shopper card (`coa-card.js`) and the page that opens results links (`card.html`).
-- **`tests/`** has 79 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
+- **`tests/`** has 80 unit tests covering each rulebook's key limits, the parser, and the shopper card, including fictional COAs in eight lab layouts copied from real reports (`tests/fixtures/`).
 
 Adding a state means adding one rulebook object and its tests. The engine doesn't change.
 
@@ -108,7 +108,7 @@ The interface follows the 2026 trends that suit a professional tool ([Figma](htt
 The built-in parser handles simple layouts and many common lab layouts. For any layout, including scanned PDFs and photos, connect a model running on your own computer. The COA never leaves your machine. Once connected, the **Ask about this result** box can also use the model to answer questions about the report (choose **Local model** under **Answer with**).
 
 1. Install [Ollama](https://ollama.com), then `ollama pull qwen2.5:14b` (optionally `ollama pull qwen2.5vl:7b` for photos and scans).
-2. Allow the site: in PowerShell, `setx OLLAMA_ORIGINS "https://scenebiscuit-cell.github.io"`, then quit and restart Ollama. This isn't needed when the page runs from `http://localhost`.
+2. Allow the site: in PowerShell, `setx OLLAMA_ORIGINS "https://scenebiscuit.com"`, then quit and restart Ollama. This isn't needed when the page runs from `http://localhost`.
 3. Open **Use a local AI model** on the page and click **Connect**.
 
 ## Read and ask with a cloud AI
