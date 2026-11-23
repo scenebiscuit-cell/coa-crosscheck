@@ -6,7 +6,7 @@ COA Crosscheck turns a lab's certificate of analysis (COA) into a lab-results ca
 
 ## Make a card
 
-1. Open [COA Crosscheck](https://scenebiscuit-cell.github.io/coa-crosscheck/), pick your state, and check the COA.
+1. Open [COA Crosscheck](https://scenebiscuit.com/coa-crosscheck/), pick your state, and check the COA.
 2. Open **Lab results as read** and compare it with the COA. Fix any product details the reader got wrong.
 3. Open **Show these lab results on a product page**.
 4. Optional: paste a link to the lab's COA PDF. Shoppers get a **View the lab's full certificate** button.
@@ -44,7 +44,7 @@ A COA covers one batch. When a new batch goes on sale, make a new card from its 
 **Script element.** Load the script once per page, then add one card per product:
 
 ```html
-<script src="https://scenebiscuit-cell.github.io/coa-crosscheck/embed/coa-card.js" defer></script>
+<script src="https://scenebiscuit.com/coa-crosscheck/embed/coa-card.js" defer></script>
 <coa-card>
   <script type="application/json">{ "schema": "coa-card/1", ... }</script>
 </coa-card>

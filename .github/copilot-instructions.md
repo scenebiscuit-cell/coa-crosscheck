@@ -4,7 +4,7 @@ Read this before changing anything in this repository.
 
 ## What this project is
 
-A static web page that checks a cannabis lab **certificate of analysis (COA)** against one state's rules (Texas, Missouri, Colorado, California, or federal hemp) and gives a verdict (Clear, Review, or Hold). Every finding cites the rule it comes from. It's a portfolio project by Nick Lax, hosted on GitHub Pages at https://scenebiscuit-cell.github.io/coa-crosscheck/. It is not legal advice.
+A static web page that checks a cannabis lab **certificate of analysis (COA)** against one state's rules (Texas, Missouri, Colorado, California, or federal hemp) and gives a verdict (Clear, Review, or Hold). Every finding cites the rule it comes from. It's a portfolio project by Nick Lax, hosted on GitHub Pages at https://scenebiscuit.com/coa-crosscheck/. It is not legal advice.
 
 The owner knows HTML and CSS well and is still learning JavaScript. Explain JavaScript changes in plain language, keep them small, and do one testable step at a time. He works on Windows, so give PowerShell commands.
 
