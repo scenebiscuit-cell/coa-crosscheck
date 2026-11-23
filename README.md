@@ -147,4 +147,4 @@ This is a portfolio project, not legal advice. Cannabis rules change often, so c
 
 ---
 
-Created by **Nick Lax** · nlaxatx@gmail.com · MIT License
+Created by **Nick Lax** · nlaxatx@gmail.com · © 2026 Nick Lax. All rights reserved: you're welcome to read the code, but please ask before reusing it.
